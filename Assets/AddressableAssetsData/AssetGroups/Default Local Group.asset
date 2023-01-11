@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: f45238dfca94ab2768303272e3a1212b
+  m_SerializeEntries:
+  - m_GUID: fe01f4126f8dcea7a9cc3146c22a8156
+    m_Address: BattleStartPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 82633bf2e78b8d54fa07ae188788dd54
+    m_Address: TeamDetail
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7935bff00eb58da7e902ac94ff74f906
+    m_Address: TrainerDetail
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 88855fcd2cfc58f4fb9d247c8dd466e8
+    m_Address: BasicInfo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: acac18fb4df5e6e4e8e22b9ab5013420
+    m_Address: BattleScenePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 07d837adf6aa5380380e4a4f15072912
+    m_Address: PokeImg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d7db2f4fe0435facb8b4ee763e3fd412
+    m_Address: BallPrefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 587159a70078e3f81bf8b126eb09178b
+    m_Address: HistoryCommandText
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f21124bd19f803d6c95b640fb66fe8e8
+    m_Address: PokemonSelectPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 1343e0f9abb29d9a2b43f16f72c34fcd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 15c2ed7a3922348e88659eab57e031b2, type: 2}
+    - {fileID: 11400000, guid: 154a437662905f4679634e5c35d8f9ea, type: 2}
