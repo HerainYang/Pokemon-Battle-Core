@@ -82,10 +82,10 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 
             foreach (var target in targets)
             {
+                bool funcResult;
                 for (int i = 0; i < Procedure.Count; i++)
                 {
-                
-                    var funcResult = await Procedure[i](Source, target, Template);
+                    funcResult = await Procedure[i](Source, target, Template);
                     if (!funcResult)
                     {
                         break;
