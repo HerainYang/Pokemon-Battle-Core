@@ -26,6 +26,7 @@ public static class Constant
         public static readonly string CalculatingSkillPower = "CALCULATING_SKILL_POWER";
         public static readonly string CalculatingFinalDamage = "CALCULATING_FINAL_DAMAGE";
         public static readonly string AfterTakingDamage = "AFTER_TAKING_DAMAGE";
+        public static readonly string AfterHealDone = "AFTER_HEAL_DONE";
         public static readonly string AfterDebut = "AFTER_DEBUT";
         public static readonly string BeforeAddBuff = "BEFORE_ADD_BUFF";
         public static readonly string OnAddBuff = "ON_ADD_BUFF";

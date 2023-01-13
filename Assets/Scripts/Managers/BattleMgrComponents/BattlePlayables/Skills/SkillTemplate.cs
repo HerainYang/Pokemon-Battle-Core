@@ -26,6 +26,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
         public float PercentageDamage;
         public readonly string Name;
         public readonly int SkillID;
+        public int BuffID;
         public Weather WeatherType;
         public PokemonStat[] PokemonStatType;
 

@@ -43,5 +43,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
         public bool CanAddBuff = true;
 
         public List<Pokemon> TargetsList;
+
+        public bool ShouldContinueSkill = true;
     }
 }

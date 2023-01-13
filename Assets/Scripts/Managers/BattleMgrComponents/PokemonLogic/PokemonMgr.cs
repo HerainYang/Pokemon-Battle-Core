@@ -54,7 +54,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             InitTypeChart();
             var buffManager = BuffMgr.Instance;
             _pokemonConfig = new Dictionary<int, PokemonBasicInfo>();
-            _pokemonConfig.Add(4, new PokemonBasicInfo(4, "Charizard", 360, 293, 280, 348, 295, 328, PokemonType.Fire, new[] { 187, 7, 241, 264 }, new[] { 94 }, "PokeImg[xiaohuolong]"));
+            _pokemonConfig.Add(4, new PokemonBasicInfo(4, "Charizard", 360, 293, 280, 348, 295, 328, PokemonType.Fire, new[] { 187, 7, 241, 20002 }, new[] { 94 }, "PokeImg[xiaohuolong]"));
             _pokemonConfig.Add(1, new PokemonBasicInfo(1, "Bulbasaur", 364, 289, 291, 328, 328, 284, PokemonType.Grass, new[] { 73, 202, 188, 235 }, new[] { 34 }, "PokeImg[wangba]"));
             _pokemonConfig.Add(25, new PokemonBasicInfo(25, "Pikachu", 324, 306, 229, 306, 284, 350, PokemonType.Electric, new[] { 417, 85, 237, 411 }, new[] { 9, 31 }, "PokeImg[pikaqiu]"));
             _pokemonConfig.Add(132, new PokemonBasicInfo(132, "Ditto", 300, 214, 214, 214, 214, 214, PokemonType.Normal, new[] { 144 }, new[] { 150 }, "PokeImg[baibianguai]"));
@@ -102,8 +102,9 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             tempSkill = new SkillTemplate("Void Skill For Test", 10000, PokemonType.Normal, SkillType.Physical, 15, SkillTargetType.OneEnemy, new[] { BattleLogic.OnlyForTest });
             _skillConfig.Add(10000, tempSkill);
 
-            tempSkill = new SkillTemplate("Test Poison", 10001, PokemonType.Poison, SkillType.Status, 15, SkillTargetType.OneEnemy, new[] { BattleLogic.TryAddPoison });
+            tempSkill = new SkillTemplate("Test Poison", 10001, PokemonType.Poison, SkillType.Status, 15, SkillTargetType.OneEnemy, new[] { BattleLogic.TryAddBuffByProb });
             tempSkill.SpecialEffectProb = 1;
+            tempSkill.BuffID = 0;
             _skillConfig.Add(10001, tempSkill);
 
             tempSkill = new SkillTemplate("Protect", 182, PokemonType.Normal, SkillType.Status, 4, 15, SkillTargetType.Self, new[] { BattleLogic.TryAddGuard });
@@ -118,7 +119,8 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             tempSkill.Accuracy = 100;
             _skillConfig.Add(202, tempSkill);
 
-            tempSkill = new SkillTemplate("Sludge Bomb", 188, PokemonType.Poison, SkillType.Special, 10, SkillTargetType.OneEnemy, new[] { BattleLogic.TryApplyDamage, BattleLogic.TryAddPoison });
+            tempSkill = new SkillTemplate("Sludge Bomb", 188, PokemonType.Poison, SkillType.Special, 10, SkillTargetType.OneEnemy, new[] { BattleLogic.TryApplyDamage, BattleLogic.TryAddBuffByProb });
+            tempSkill.BuffID = 0;
             tempSkill.Power = 90;
             tempSkill.Accuracy = 100;
             tempSkill.SpecialEffectProb = 0.3f;
@@ -128,7 +130,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             tempSkill.PercentageDamage = 0.5f;
             _skillConfig.Add(235, tempSkill);
 
-            tempSkill = new SkillTemplate("Sunny Day", 241, PokemonType.Fire, SkillType.Status, 5, SkillTargetType.All, new[] { BattleLogic.TryAddWeather });
+            tempSkill = new SkillTemplate("Sunny Day", 241, PokemonType.Fire, SkillType.Status, 5, SkillTargetType.Self, new[] { BattleLogic.TryAddWeather });
             tempSkill.WeatherType = Weather.HarshSunlight;
             _skillConfig.Add(241, tempSkill);
 
@@ -195,13 +197,23 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             tempSkill = new SkillTemplate("Destiny Bond", 194, PokemonType.Ghost, SkillType.Status, 5, SkillTargetType.OneEnemy, new[] { BattleLogic.TryDestinyBond });
             _skillConfig.Add(194, tempSkill);
             
-            tempSkill = new SkillTemplate("Shadow Ball	", 247, PokemonType.Ghost, SkillType.Special, 15, SkillTargetType.OneEnemy, new[] { BattleLogic.TryApplyDamage, BattleLogic.ProbChangeStat });
+            tempSkill = new SkillTemplate("Shadow Ball", 247, PokemonType.Ghost, SkillType.Special, 15, SkillTargetType.OneEnemy, new[] { BattleLogic.TryApplyDamage, BattleLogic.ProbChangeStat });
             tempSkill.Power = 80;
             tempSkill.Accuracy = 100;
             tempSkill.SpecialEffectProb = 0.2f;
             tempSkill.PokemonStatPoint = new[] { -1 };
             tempSkill.PokemonStatType = new[] { PokemonStat.SpecialDefence };
             _skillConfig.Add(247, tempSkill);
+
+
+            tempSkill = new SkillTemplate("Borrowed Time", 20001, PokemonType.Normal, SkillType.Status, 5, SkillTargetType.Self, new []{BattleLogic.TryAddBuffDirect});
+            tempSkill.BuffID = 31;
+            _skillConfig.Add(20001, tempSkill);
+            
+            tempSkill = new SkillTemplate("Kizuna", 20002, PokemonType.Normal, SkillType.Status, 5, SkillTargetType.OneEnemy, new []{BattleLogic.TryAddBuffDirect});
+            tempSkill.BuffID = 32;
+            _skillConfig.Add(20002, tempSkill);
+            
             //buffs
             _buffConfig = new Dictionary<int, BuffTemplate>();
             BuffTemplate tempBuff;
@@ -320,6 +332,12 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             tempBuff = new BuffTemplate(30, "Cursed Body", Int32.MaxValue, BattleLogic.CursedBody, null, Constant.BuffExecutionTimeKey.AfterTakingDamage);
             tempBuff.SpecialEffectProb = 0.3f;
             _buffConfig.Add(30, tempBuff);
+
+            tempBuff = new BuffTemplate(31, "Borrowed Time", 5, BattleLogic.BorrowedTime, null, Constant.BuffExecutionTimeKey.CalculatingFinalDamage);
+            _buffConfig.Add(31, tempBuff);
+            
+            tempBuff = new BuffTemplate(32, "Kizuna", 5, BattleLogic.Kizuna, null, Constant.BuffExecutionTimeKey.AfterHealDone);
+            _buffConfig.Add(32, tempBuff);
         }
 
         public PokemonBasicInfo GetPokemonByID(int id)
