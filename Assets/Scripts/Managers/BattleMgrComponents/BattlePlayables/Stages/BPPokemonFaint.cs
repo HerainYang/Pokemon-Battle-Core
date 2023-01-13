@@ -25,7 +25,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
             int pokemonInBagIndex = BattleMgr.Instance.PlayerInGame[_curPokemon.TrainerID].Pokemons.FindIndex(pokemon1 => pokemon1.RuntimeID == _curPokemon.RuntimeID);
             BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetPokeBallStatus(BattleMgr.Instance.PlayerInGame[_curPokemon.TrainerID], _curPokemon, pokemonInBagIndex);
 
-            BattleMgr.Instance.SetCommandText(_curPokemon.Name + " faint");
+            await BattleMgr.Instance.SetCommandText(_curPokemon.Name + " faint");
             await UniTask.Delay(BattleMgr.Instance.AwaitTime);
             if (_trainer.AllPokemonFaint())
             {

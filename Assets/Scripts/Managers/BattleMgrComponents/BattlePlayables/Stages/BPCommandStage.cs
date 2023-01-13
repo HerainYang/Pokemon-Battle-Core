@@ -14,6 +14,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
     public class BpCommandStage : ABattlePlayable
     {
         private HashSet<Tuple<ABattlePlayer, Guid>> _commandWaitList;
+        private HashSet<Tuple<ABattlePlayer, Guid>> _receiveList;
         public BpCommandStage() : base((int)PlayablePriority.CommandStage)
         {
             
@@ -21,6 +22,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         public override async void Execute()
         {
             _commandWaitList = new HashSet<Tuple<ABattlePlayer, Guid>>();
+            _receiveList = new HashSet<Tuple<ABattlePlayer, Guid>>();
             EventMgr.Instance.AddListener<ABattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ReceiveCommand);
             foreach (var pokemon in BattleMgr.Instance.OnStagePokemon)
             {
@@ -39,7 +41,6 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
                 _commandWaitList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             }
 
-            // for those player who don't need to add pokemon, they can start to give command
             foreach (var player in _commandWaitList)
             {
                 player.Item1.ExecuteCommandStage();
@@ -48,9 +49,10 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 
         private void ReceiveCommand(ABattlePlayer player, Pokemon pokemon)
         {
-            _commandWaitList.Remove(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
+            // _commandWaitList.Remove(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
+            _receiveList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             Debug.Log("[BPCommandStage] Receive Command From " + player.PlayerInfo.name + " of pokemon " + pokemon.RuntimeID + ", remains " + _commandWaitList.Count + " to wait!");
-            if (_commandWaitList.Count == 0)
+            if (_commandWaitList.Count == _receiveList.Count)
             {
                 OnDestroy();
                 return;
@@ -62,6 +64,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         protected override void OnDestroy()
         {
             _commandWaitList = null;
+            _receiveList = null;
             EventMgr.Instance.RemoveListener<ABattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ReceiveCommand);
             BattleMgr.Instance.BattlePlayableEnd();
         }

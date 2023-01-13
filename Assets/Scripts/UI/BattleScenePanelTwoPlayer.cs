@@ -26,7 +26,8 @@ namespace UI
         [Header("Buttons")]
         [SerializeField] private Button[] btns;
 
-        private Text[] _btnTexts;
+        [SerializeField]
+        private Text[] btnTexts;
 
         [Header("Pokemon Info")] public PokemonBattleInfo selfPokemonInfo;
         public PokemonBattleInfo opPokemonInfo;
@@ -67,12 +68,10 @@ namespace UI
             _selfBalls = new List<Grayout>();
             _opBalls = new List<Grayout>();
 
-            _btnTexts = new Text[btns.Length];
-            for (int i = 0; i < btns.Length; i++)
+            for (int i = 0; i < btnTexts.Length; i++)
             {
                 var i1 = i;
                 btns[i].onClick.AddListener(delegate { SendLoadRequest(i1); });
-                _btnTexts[i] = btns[i].transform.GetChild(0).GetComponent<Text>();
             }
             
         }
@@ -89,9 +88,9 @@ namespace UI
 
         private void OnDestroy()
         {
-            for (int i = 0; i < btns.Length; i++)
+            foreach (var btn in btns)
             {
-                btns[i].onClick.RemoveAllListeners();
+                btn.onClick.RemoveAllListeners();
             }
         }
 
@@ -123,7 +122,7 @@ namespace UI
             ShowSelectPanel(onStagePosition, true);
         }
 
-        public async void SetCommandText(string text)
+        public async UniTask SetCommandText(string text)
         {
             commandText.text = text;
             if (_commandTextPrefab == null)
@@ -136,6 +135,7 @@ namespace UI
             var temp = Instantiate(_commandTextPrefab, historyCommandArea);
             temp.GetComponent<Text>().text = text;
 
+            await UniTask.Delay(BattleMgr.Instance.AwaitTime);
             Canvas.ForceUpdateCanvases();
 
             historyViewVerticalBar.normalizedPosition = new Vector2(0, 0);
@@ -144,11 +144,11 @@ namespace UI
         //Button Setup (BS)
         private void DefaultBs()
         {
-            _btnTexts[0].text = "Skills";
-            _btnTexts[1].text = "Pokemons";
-            _btnTexts[2].text = "Items";
-            _btnTexts[3].text = "Run";
-            _btnTexts[4].text = "Catch";
+            btnTexts[0].text = "Skills";
+            btnTexts[1].text = "Pokemons";
+            btnTexts[2].text = "Items";
+            btnTexts[3].text = "Run";
+            btnTexts[4].text = "Catch";
             for (int index = 0; index < btns.Length; index++)
             {
                 btns[index].interactable = true;
@@ -163,18 +163,18 @@ namespace UI
             for (; index < skills.Length; index++)
             {
                 btns[index].interactable = _curPokemon.CanUseSkillByIndex(index);
-                _btnTexts[index].text = PokemonMgr.Instance.GetSkillTemplateByID(skills[index]).Name + " [" + _curPokemon.Pps[index] + "/" + PokemonMgr.Instance.GetSkillTemplateByID(skills[index]).PowerPoint + "]";
+                btnTexts[index].text = PokemonMgr.Instance.GetSkillTemplateByID(skills[index]).Name + " [" + _curPokemon.Pps[index] + "/" + PokemonMgr.Instance.GetSkillTemplateByID(skills[index]).PowerPoint + "]";
             }
 
             while (index < 4)
             {
                 btns[index++].interactable = false;
             }
-            _btnTexts[4].text = "Back";
+            btnTexts[4].text = "Back";
             _requestType = CommandRequestType.Skills;
         }
 
-        public void ShowSelectPanel(int onStagePosition, bool forceChange)
+        private void ShowSelectPanel(int onStagePosition, bool forceChange)
         {
             UIWindowsManager.Instance.ShowUIWindowAsync("PokemonSelectPanel").ContinueWith((o =>
             {
@@ -182,7 +182,7 @@ namespace UI
             }));
         }
 
-        public void SendLoadRequest(int index)
+        private void SendLoadRequest(int index)
         {
             if (_requestType == CommandRequestType.Default)
             {

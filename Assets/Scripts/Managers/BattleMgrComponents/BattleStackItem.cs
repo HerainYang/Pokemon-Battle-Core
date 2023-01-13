@@ -8,7 +8,7 @@ namespace Managers.BattleMgrComponents
     {
         public Pokemon Source;
         public List<Pokemon> Targets;
-        public SkillTemplate Template;
+        public CommonSkillTemplate Template;
         public Dictionary<Pokemon, int> Damages;
     }
 }

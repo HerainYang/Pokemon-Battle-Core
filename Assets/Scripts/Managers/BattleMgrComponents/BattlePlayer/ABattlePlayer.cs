@@ -98,7 +98,6 @@ namespace Managers.BattleMgrComponents.BattlePlayer
             }
 
             return -1;
-            throw new Exception("All Pokemon Faint, this shouldn't happen");
         }
     }
 }

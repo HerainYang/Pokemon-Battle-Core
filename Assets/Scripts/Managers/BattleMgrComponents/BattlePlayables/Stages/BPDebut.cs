@@ -30,7 +30,6 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         {
             Pokemon pokemonBasicInfoInstance = BattleMgr.Instance.PlayerInGame[_info.playerID].Pokemons[_pokemonIndex];
             pokemonBasicInfoInstance.OnStage = true;
-            BattleMgr.Instance.SetCommandText(_info.name + " send " + pokemonBasicInfoInstance.GetName());
             if (_info.isAI)
             {
                 BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonInfo(pokemonBasicInfoInstance);
@@ -40,12 +39,12 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
                 BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonInfo(pokemonBasicInfoInstance);
             }
             await pokemonBasicInfoInstance.Attribute.InitAttribute(pokemonBasicInfoInstance);
-            await UniTask.Delay(BattleMgr.Instance.AwaitTime);
             BattleMgr.Instance.OnStagePokemon[_onStagePosition] = pokemonBasicInfoInstance;
             CommonResult result = new CommonResult();
             result.DebutPokemon = pokemonBasicInfoInstance;
             result.TargetWeather = BattleMgr.Instance.GetWeather();
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.AfterDebut, result, pokemonBasicInfoInstance);
+            await BattleMgr.Instance.SetCommandText(_info.name + " send " + pokemonBasicInfoInstance.GetName());
             OnDestroy();
         }
 

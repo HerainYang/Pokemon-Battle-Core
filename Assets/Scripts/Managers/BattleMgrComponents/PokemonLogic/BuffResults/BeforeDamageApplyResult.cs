@@ -8,9 +8,9 @@ namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
         public int Priority;
         public bool ShouldSuccess;
         public string Message;
-        public SkillTemplate Template;
+        public CommonSkillTemplate Template;
 
-        public BeforeDamageApplyResult(int priority, bool shouldSuccess, string message, SkillTemplate template)
+        public BeforeDamageApplyResult(int priority, bool shouldSuccess, string message, CommonSkillTemplate template)
         {
             Priority = priority;
             ShouldSuccess = shouldSuccess;

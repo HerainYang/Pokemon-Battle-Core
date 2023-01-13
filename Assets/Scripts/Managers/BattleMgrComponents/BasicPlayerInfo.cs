@@ -1,3 +1,5 @@
+using System;
+
 namespace Managers.BattleMgrComponents
 {
     [System.Serializable]
@@ -8,5 +10,7 @@ namespace Managers.BattleMgrComponents
         public int[] pokemonIDs;
         public bool isAI;
         public int teamID;
+
+        public int[] items;
     }
 }

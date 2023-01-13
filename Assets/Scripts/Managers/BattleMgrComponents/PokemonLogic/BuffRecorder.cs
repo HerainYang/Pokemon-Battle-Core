@@ -12,7 +12,9 @@ namespace Managers.BattleMgrComponents.PokemonLogic
         public Pokemon Target;
         public int TargetIndex;
         public int StartAtRound;
-        public BuffTemplate Template;
+        
+        public CommonSkillTemplate Template;
+        
         public int EffectLastRound;
         public bool IsAttribute;
         public bool IsWeather;
@@ -21,9 +23,9 @@ namespace Managers.BattleMgrComponents.PokemonLogic
         public PokemonType SType;
         public Weather WeatherType;
 
-        public SkillTemplate ForbiddenSkill;
+        public CommonSkillTemplate ForbiddenCommonSkill;
 
-        public BuffRecorder(Pokemon source, Pokemon target, BuffTemplate buffTemplate, bool isAttribute, bool isWeather)
+        public BuffRecorder(Pokemon source, Pokemon target, CommonSkillTemplate buffTemplate, bool isAttribute, bool isWeather)
         {
             Source = source;
             Target = target;

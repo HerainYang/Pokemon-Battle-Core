@@ -52,7 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   teamContent: {fileID: 6049112230375157676}
-  _startBtn: {fileID: 219528512740085941}
+  startBtn: {fileID: 219528512740085941}
 --- !u!1 &2222919171317826854
 GameObject:
   m_ObjectHideFlags: 0

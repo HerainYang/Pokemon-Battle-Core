@@ -258,7 +258,7 @@ namespace Editor
             PokemonInfoMonitor.ShowWindow(pokemon);
         }
 
-        private void DisplaySkillInfo(SkillTemplate template)
+        private void DisplaySkillInfo(CommonSkillTemplate template)
         {
             SkillInfoMonitor.ShowWindow(template);
         }

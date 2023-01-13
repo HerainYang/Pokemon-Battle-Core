@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Enum;
 using UnityEngine;
 using Random = System.Random;
@@ -98,13 +99,13 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             Pps[index] -= 1;
         }
 
-        public bool ChangeHp(int value)
+        public async UniTask<bool> ChangeHp(int value)
         {
-            Debug.Log("[Pokemon] Hp Change: damage " + value);
+            Debug.Log("[Pokemon] "+Name+ " Hp Change: damage " + value);
             int actualValue = value;
             if (IsFaint)
             {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("But have no effect");
+                await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("But have no effect");
                 return false;
             }
             

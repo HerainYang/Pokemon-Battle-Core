@@ -6,44 +6,44 @@ namespace Editor
 {
     public class SkillInfoMonitor : EditorWindow
     {
-        public SkillTemplate TargetSkill;
+        public CommonSkillTemplate TargetCommonSkill;
         private static EditorWindow _thisWindow;
 
-        public static void ShowWindow(SkillTemplate skill)
+        public static void ShowWindow(CommonSkillTemplate commonSkill)
         {
             if (!_thisWindow)
             {
                 _thisWindow = EditorWindow.GetWindow<SkillInfoMonitor>(typeof(PokemonInfoMonitor));
             }
-            ((SkillInfoMonitor)_thisWindow).TargetSkill = skill;
+            ((SkillInfoMonitor)_thisWindow).TargetCommonSkill = commonSkill;
             _thisWindow.Focus();
         }
 
         private void OnGUI()
         {
-            if(TargetSkill == null)
+            if(TargetCommonSkill == null)
                 return;
-            EditorGUILayout.LabelField(TargetSkill.Name,  EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Type: "+ TargetSkill.Type);
-            EditorGUILayout.LabelField("Skill target type: "+ TargetSkill.TargetType);
+            EditorGUILayout.LabelField(TargetCommonSkill.Name,  EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Type: "+ TargetCommonSkill.Type);
+            EditorGUILayout.LabelField("Skill target type: "+ TargetCommonSkill.TargetType);
             
-            EditorGUILayout.LabelField("Priority level "+ TargetSkill.PriorityLevel);
+            EditorGUILayout.LabelField("Priority level "+ TargetCommonSkill.PriorityLevel);
 
-            EditorGUILayout.LabelField("Power " + TargetSkill.Power);
-            EditorGUILayout.LabelField("Accuracy "+ TargetSkill.Accuracy);
-            EditorGUILayout.LabelField("Powerpoint "+ TargetSkill.PowerPoint);
-            EditorGUILayout.LabelField("Special effect trigger prob "+ TargetSkill.SpecialEffectProb);
-            EditorGUILayout.LabelField("Critical rate "+ TargetSkill.CriticalRate);
-            EditorGUILayout.LabelField("Percentage damage "+ TargetSkill.PercentageDamage * 100 + "%");
-            EditorGUILayout.LabelField("Weather type "+ TargetSkill.WeatherType);
+            EditorGUILayout.LabelField("Power " + TargetCommonSkill.Power);
+            EditorGUILayout.LabelField("Accuracy "+ TargetCommonSkill.Accuracy);
+            EditorGUILayout.LabelField("Powerpoint "+ TargetCommonSkill.PowerPoint);
+            EditorGUILayout.LabelField("Special effect trigger prob "+ TargetCommonSkill.SpecialEffectProb);
+            EditorGUILayout.LabelField("Critical rate "+ TargetCommonSkill.CriticalRate);
+            EditorGUILayout.LabelField("Percentage damage "+ TargetCommonSkill.PercentageDamage * 100 + "%");
+            EditorGUILayout.LabelField("Weather type "+ TargetCommonSkill.WeatherType);
 
             
             EditorGUILayout.LabelField("Status Change",  EditorStyles.boldLabel);
-            if(TargetSkill.PokemonStatType == null)
+            if(TargetCommonSkill.PokemonStatType == null)
                 return;
-            for (int i = 0; i < TargetSkill.PokemonStatType.Length; i++)
+            for (int i = 0; i < TargetCommonSkill.PokemonStatType.Length; i++)
             {
-                EditorGUILayout.LabelField(TargetSkill.PokemonStatType[i] + " change " + TargetSkill.PokemonStatPoint[i]);
+                EditorGUILayout.LabelField(TargetCommonSkill.PokemonStatType[i] + " change " + TargetCommonSkill.PokemonStatPoint[i]);
             }
         }
     }

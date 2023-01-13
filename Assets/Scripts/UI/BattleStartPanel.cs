@@ -1,56 +1,55 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Managers;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayer;
-using UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class BattleStartPanel : MonoBehaviour
+namespace UI
 {
-    [SerializeField] private Transform teamContent;
-    [SerializeField] private Button _startBtn;
-
-    private Dictionary<int, List<ABattlePlayer>> _teamInfoDic;
-    private void Awake()
+    public class BattleStartPanel : MonoBehaviour
     {
-        _teamInfoDic = new Dictionary<int, List<ABattlePlayer>>();
-        _startBtn.onClick.AddListener(StartBtnBehavior);
-        foreach (var pair in BattleMgr.Instance.PlayerInGame)
+        [SerializeField] private Transform teamContent;
+        [SerializeField] private Button startBtn;
+
+        private Dictionary<int, List<ABattlePlayer>> _teamInfoDic;
+        private void Awake()
         {
-            var player = pair.Value;
-            if (!_teamInfoDic.ContainsKey(player.PlayerInfo.teamID))
+            _teamInfoDic = new Dictionary<int, List<ABattlePlayer>>();
+            startBtn.onClick.AddListener(StartBtnBehavior);
+            foreach (var pair in BattleMgr.Instance.PlayerInGame)
             {
-                _teamInfoDic.Add(player.PlayerInfo.teamID, new List<ABattlePlayer>());
+                var player = pair.Value;
+                if (!_teamInfoDic.ContainsKey(player.PlayerInfo.teamID))
+                {
+                    _teamInfoDic.Add(player.PlayerInfo.teamID, new List<ABattlePlayer>());
+                }
+                _teamInfoDic[player.PlayerInfo.teamID].Add(player);
             }
-            _teamInfoDic[player.PlayerInfo.teamID].Add(player);
+            foreach (var pair in _teamInfoDic)
+            {
+                InitTeamDetails(pair.Value);
+            }
         }
-        foreach (var pair in _teamInfoDic)
+
+        private async void InitTeamDetails(List<ABattlePlayer> infos)
         {
-            InitTeamDetails(pair.Value);
+            var handler = Addressables.LoadAssetAsync<GameObject>("TeamDetail");
+            await handler;
+            var detail = Instantiate(handler.Result, teamContent);
+            detail.GetComponent<TeamDetail>().InitTrainerDetail(infos);
         }
-    }
 
-    private async void InitTeamDetails(List<ABattlePlayer> infos)
-    {
-        var handler = Addressables.LoadAssetAsync<GameObject>("TeamDetail");
-        await handler;
-        var detail = Instantiate(handler.Result, teamContent);
-        detail.GetComponent<TeamDetail>().InitTrainerDetail(infos);
-    }
-
-    private void StartBtnBehavior()
-    {
-        UIWindowsManager.Instance.ShowUIWindowAsync("BattleScenePanel").ContinueWith((o =>
+        private void StartBtnBehavior()
         {
-            BattleScenePanelTwoPlayer battleScenePanelTwoPlayer = o.GetComponent<BattleScenePanelTwoPlayer>();
-            battleScenePanelTwoPlayer.SetPlayerInfo();
-            UIWindowsManager.Instance.HideUIWindow("BattleStartPanel");
-        }));
+            UIWindowsManager.Instance.ShowUIWindowAsync("BattleScenePanel").ContinueWith((o =>
+            {
+                BattleScenePanelTwoPlayer battleScenePanelTwoPlayer = o.GetComponent<BattleScenePanelTwoPlayer>();
+                battleScenePanelTwoPlayer.SetPlayerInfo();
+                UIWindowsManager.Instance.HideUIWindow("BattleStartPanel");
+            }));
+        }
     }
 }

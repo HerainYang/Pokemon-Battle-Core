@@ -307,14 +307,16 @@ MonoBehaviour:
   playerInfos:
   - playerID: p1
     name: Herain
-    pokemonIDs: 04000000010000006e03000019000000840000005e000000
+    pokemonIDs: 040000000100000084000000190000006e0300005e000000
     isAI: 0
     teamID: 0
+    items: 
   - playerID: a1
     name: Enemy1
     pokemonIDs: 010000000400000019000000010000000100000001000000
     isAI: 1
     teamID: 1
+    items: 
 --- !u!4 &782404137
 Transform:
   m_ObjectHideFlags: 0

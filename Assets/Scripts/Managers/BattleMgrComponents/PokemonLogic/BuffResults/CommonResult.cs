@@ -16,7 +16,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
         public float CriticalRate;
         public bool IsCritical;
 
-        public SkillTemplate STemplate;
+        public CommonSkillTemplate STemplate;
 
         public Pokemon DebutPokemon;
 

@@ -35,7 +35,7 @@ namespace Managers.BattleMgrComponents
 
         public ABattlePlayer LocalPlayer;
 
-        public int AwaitTime = 1000;
+        public readonly int AwaitTime = 1000;
 
         private Weather _curWeather;
 
@@ -126,13 +126,15 @@ namespace Managers.BattleMgrComponents
             foreach (var pair in PlayerInGame)
             {
                 var player = pair.Value;
-                PokemonStageIndex2PlayerMapping[index] = player;
+                for (int i = 0; i < _maxAllowPokemonOnStage; i++)
+                {
+                    PokemonStageIndex2PlayerMapping[index] = player;
+                    index++;
+                }
                 foreach (var pokemonID in player.PlayerInfo.pokemonIDs)
                 {
                     player.Pokemons.Add(new Pokemon(PokemonMgr.Instance.GetPokemonByID(pokemonID), player.PlayerInfo.playerID));
                 }
-
-                index++;
             }
 
             EventMgr.Instance.AddListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
@@ -148,12 +150,12 @@ namespace Managers.BattleMgrComponents
             _curBattleRound = null;
         }
         
-        public void SetCommandText(string text)
+        public async UniTask SetCommandText(string text)
         {
             if (BattleScenePanelTwoPlayerUI == null)
                 return;
             Debug.Log("[BattleMgr] Set command text: " + text);
-            BattleScenePanelTwoPlayerUI.SetCommandText(text);
+            await BattleScenePanelTwoPlayerUI.SetCommandText(text);
         }
         
         // get set attributes
@@ -221,7 +223,7 @@ namespace Managers.BattleMgrComponents
         {
             await BuffMgr.Instance.Update();
 
-            SetCommandText(" ");
+            await SetCommandText(" ");
             LoadNextBattleRound();
         }
 
@@ -266,7 +268,7 @@ namespace Managers.BattleMgrComponents
             result = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeLoadPokemonSkill, result, pokemon);
             
 
-            SkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(pokemon.GetSkills()[result.LoadSkill]);
+            CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(pokemon.GetSkills()[result.LoadSkill]);
             //pre select target, might be no one on stage, in this case, 
             int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
             pokemon.ConsumePpByIndex(result.LoadSkill);
@@ -284,7 +286,7 @@ namespace Managers.BattleMgrComponents
             result.LoadSkill = skillIndex;
             result = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeLoadPokemonSkill, result, pokemon);
 
-            SkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
+            CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
 
             //pre select target, might be no one on stage, in this case, 
             int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
@@ -296,7 +298,7 @@ namespace Managers.BattleMgrComponents
         public async void LoadPokemonSkillDirectlyImm(Pokemon pokemon, int skillIndex)
         {
 
-            SkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
+            CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
 
             //pre select target, might be no one on stage, in this case, 
             int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
@@ -339,7 +341,7 @@ namespace Managers.BattleMgrComponents
         {
             if (type == _curWeather)
             {
-                SetCommandText("But fail to change the weather!");
+                await SetCommandText("But fail to change the weather!");
                 return false;
             }
 
@@ -352,7 +354,7 @@ namespace Managers.BattleMgrComponents
                 switch (_curWeather)
                 {
                     case Weather.HarshSunlight: 
-                        SetCommandText("The harsh sunlight faded");
+                        await SetCommandText("The harsh sunlight faded");
                         break;
                     default:
                         throw new NotImplementedException();
@@ -371,7 +373,7 @@ namespace Managers.BattleMgrComponents
             switch (_curWeather)
             {
                 case Weather.HarshSunlight:
-                    SetCommandText("The sunlight is harsh!");
+                    await SetCommandText("The sunlight is harsh!");
                     break;;
                 default:
                     throw new NotImplementedException();
@@ -415,6 +417,7 @@ namespace Managers.BattleMgrComponents
                     return;
             }
 
+            player.Pokemons[pokemonIndex].OnStage = true;
             _curBattleRound.AddBattlePlayables(new BpDebut(player.PlayerInfo, pokemonIndex, onStagePosition));
             
             EventMgr.Instance.Dispatch(Constant.EventKey.BattleCommandSent, player, targetPokemon);

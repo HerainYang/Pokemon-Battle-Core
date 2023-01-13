@@ -92,6 +92,8 @@ namespace UI.BattleUIComponent
     
         private void SetHpAnimate(int hpTo, Pokemon target)
         {
+            // float targetLength = ((float)(hpTo) / target.GetHpMax()) * 400;
+            // hp.sizeDelta = new Vector2(targetLength, hp.rect.height);
             if (_curPokemon != null && target.RuntimeID != _curPokemon.RuntimeID)
             {
                 return;

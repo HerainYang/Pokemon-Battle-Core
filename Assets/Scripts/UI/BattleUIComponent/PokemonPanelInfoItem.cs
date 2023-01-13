@@ -80,7 +80,7 @@ public class PokemonPanelInfoItem : MonoBehaviour
             UIWindowsManager.Instance.HideUIWindow("PokemonSelectPanel");
             if (_curPokemon != null)
             {
-                BattleMgr.Instance.SetCommandText("Come back! " + _curPokemon.Name);
+                await BattleMgr.Instance.SetCommandText("Come back! " + _curPokemon.Name);
                 await UniTask.Delay(BattleMgr.Instance.AwaitTime);
             }
             EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, _index, _targetPosition);

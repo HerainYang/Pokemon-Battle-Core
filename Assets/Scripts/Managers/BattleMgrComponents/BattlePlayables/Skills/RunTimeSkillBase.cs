@@ -14,12 +14,12 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
     {
         public Pokemon Source;
         public int[] TargetIndices;
-        public SkillTemplate Template;
-        public List<Func<Pokemon, Pokemon, SkillTemplate, UniTask<bool>>> Procedure;
+        public CommonSkillTemplate Template;
+        public List<Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>> Procedure;
 
-        public RunTimeSkillBase(SkillTemplate template, Pokemon source, int[] targetIndices) : base(BattleLogic.GetPokemonSpeed(source))
+        public RunTimeSkillBase(CommonSkillTemplate template, Pokemon source, int[] targetIndices) : base(BattleLogic.GetPokemonSpeed(source))
         {
-            Procedure = new List<Func<Pokemon, Pokemon, SkillTemplate, UniTask<bool>>>();
+            Procedure = new List<Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>>();
             Template = template;
             Source = source;
             TargetIndices = targetIndices;
@@ -33,14 +33,12 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
             BattleMgr.Instance.BattleStack.Add(item);
             
             if(Source.OnStage && !Source.IsFaint) 
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(BattleMgr.Instance.PlayerInGame[Source.TrainerID].PlayerInfo.name + " asks " + Source.GetName() + " to use " + Template.Name);
-            await UniTask.Delay(BattleMgr.Instance.AwaitTime);
+                await BattleMgr.Instance.SetCommandText(BattleMgr.Instance.PlayerInGame[Source.TrainerID].PlayerInfo.name + " asks " + Source.GetName() + " to use " + Template.Name);
             if (Available == false)
             {
                 if (Source.OnStage && !Source.IsFaint)
                 {
-                    BattleMgr.Instance.SetCommandText("But failed!");
-                    await UniTask.Delay(BattleMgr.Instance.AwaitTime);
+                    await BattleMgr.Instance.SetCommandText("But failed!");
                 }
                 OnDestroy();
                 return;
@@ -70,15 +68,13 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
             {
                 if (result.Message != null)
                 {
-                    BattleMgr.Instance.SetCommandText(result.Message);
-                    await UniTask.Delay(BattleMgr.Instance.AwaitTime);
+                    await BattleMgr.Instance.SetCommandText(result.Message);
                 }
                 return;
             }
             if (targets == null || targets.Count == 0)
             {
-                BattleMgr.Instance.SetCommandText("But there is no target!");
-                await UniTask.Delay(BattleMgr.Instance.AwaitTime);
+                await BattleMgr.Instance.SetCommandText("But there is no target!");
                 return;
             }
 
