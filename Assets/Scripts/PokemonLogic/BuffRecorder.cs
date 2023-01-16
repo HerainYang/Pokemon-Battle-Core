@@ -25,6 +25,8 @@ namespace Managers.BattleMgrComponents.PokemonLogic
 
         public CommonSkillTemplate ForbiddenCommonSkill;
 
+        public int[] SkillTargets;
+
         public BuffRecorder(Pokemon source, Pokemon target, CommonSkillTemplate buffTemplate, bool isAttribute, bool isWeather)
         {
             Source = source;

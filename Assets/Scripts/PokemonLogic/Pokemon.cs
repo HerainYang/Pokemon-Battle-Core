@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Enum;
+using PokemonLogic;
 using UnityEngine;
 using Random = System.Random;
 

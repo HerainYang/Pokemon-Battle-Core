@@ -15,11 +15,11 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
         public Pokemon Source;
         public int[] TargetIndices;
         public CommonSkillTemplate Template;
-        public List<Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>> Procedure;
+        public List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>> Procedure;
 
         public RunTimeSkillBase(CommonSkillTemplate template, Pokemon source, int[] targetIndices) : base(BattleLogic.GetPokemonSpeed(source))
         {
-            Procedure = new List<Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>>();
+            Procedure = new List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>>();
             Template = template;
             Source = source;
             TargetIndices = targetIndices;
@@ -43,7 +43,12 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
                 OnDestroy();
                 return;
             }
-            BattleLogic.CheckSkillValidation(this);
+            if (Template.ProcedureFunctions == null)
+                return;
+            foreach (var func in Template.ProcedureFunctions)
+            {
+                Procedure.Add(func);
+            }
             await ExecuteList();
             
             OnDestroy();
@@ -82,11 +87,11 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 
             foreach (var target in targets)
             {
-                bool funcResult;
+                CommonResult funcResult = new CommonResult();
                 for (int i = 0; i < Procedure.Count; i++)
                 {
-                    funcResult = await Procedure[i](Source, target, Template);
-                    if (!funcResult)
+                    funcResult = await Procedure[i](funcResult, Source, target, Template);
+                    if (funcResult == null)
                     {
                         break;
                     }

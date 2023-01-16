@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.PokemonLogic;
+using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 {
@@ -33,7 +34,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
         public int[] PokemonStatPoint;
         public PokemonStat[] PokemonStatType;
 
-        public Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>[] ProcedureFunctions;
+        public Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>[] ProcedureFunctions;
         
         //Buff properties:
         public int BuffID;
@@ -55,7 +56,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
         }
 
         //skill constructor
-        public CommonSkillTemplate(string name, int skillID, PokemonType type, SkillType skillType, int priorityLevel, int powerPoint, SkillTargetType targetType, Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>[] procedureFunctions)
+        public CommonSkillTemplate(string name, int skillID, PokemonType type, SkillType skillType, int priorityLevel, int powerPoint, SkillTargetType targetType, Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>[] procedureFunctions)
         {
             Name = name;
             SkillID = skillID;
@@ -66,7 +67,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
             PriorityLevel = priorityLevel;
             SkillType = skillType;
         }
-        public CommonSkillTemplate(string name, int skillID, PokemonType type, SkillType skillType, int powerPoint, SkillTargetType targetType, Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>[] procedureFunctions) : this(name, skillID, type, skillType, 0, powerPoint, targetType, procedureFunctions)
+        public CommonSkillTemplate(string name, int skillID, PokemonType type, SkillType skillType, int powerPoint, SkillTargetType targetType, Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>[] procedureFunctions) : this(name, skillID, type, skillType, 0, powerPoint, targetType, procedureFunctions)
         {
         }
         
@@ -85,7 +86,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
         public static CommonSkillTemplate CopySkill(CommonSkillTemplate prototype)
         {
             CommonSkillTemplate commonSkillTemplate = new CommonSkillTemplate(prototype.Name, prototype.SkillID, prototype.Type, prototype.SkillType, prototype.PriorityLevel, prototype.PowerPoint, prototype.TargetType, null);
-            commonSkillTemplate.ProcedureFunctions = new Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>>[prototype.ProcedureFunctions.Length];
+            commonSkillTemplate.ProcedureFunctions = new Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>[prototype.ProcedureFunctions.Length];
             Array.Copy(prototype.ProcedureFunctions, commonSkillTemplate.ProcedureFunctions, prototype.ProcedureFunctions.Length);
             commonSkillTemplate.Power = prototype.Power;
             commonSkillTemplate.Accuracy = prototype.Accuracy;

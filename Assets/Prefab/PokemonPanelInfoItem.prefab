@@ -216,12 +216,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   valid: {r: 0.57952005, g: 0.8018868, b: 0.46524566, a: 1}
   faint: {r: 0.5377358, g: 0.23082057, b: 0.23082057, a: 1}
-  notData: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   bg: {fileID: 6855834093351184009}
   pokeImg: {fileID: 6855834094426706836}
   hpRemain: {fileID: 6855834093547850880}
   status: {fileID: 6855834093564589798}
-  hotArea: {fileID: 8941490641189321866}
+  HotArea: {fileID: 8941490641189321866}
 --- !u!1 &6855834093547850883
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using Enum;
+using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
-using UnityEngine;
+using Managers.BattleMgrComponents.PokemonLogic;
 
-namespace Managers.BattleMgrComponents.PokemonLogic
+namespace PokemonLogic
 {
     public class PokemonMgr
     {
@@ -81,6 +81,8 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             
             //buffs
             LoadBuff();
+            
+            BattleMgr.Instance.SystemLoadingDic[PokemonEssentialSystemManager.PokemonMgr] = true;
         }
 
         private void LoadSkill()
@@ -132,7 +134,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
                 };
                 _skillConfig.Add(73, tempCommonSkill);
 
-                tempCommonSkill = new CommonSkillTemplate("Giga Drain", 202, PokemonType.Grass, SkillType.Special, 10, SkillTargetType.OneEnemy, new[] { BattleLogic.TryGigaDrain })
+                tempCommonSkill = new CommonSkillTemplate("Giga Drain", 202, PokemonType.Grass, SkillType.Special, 10, SkillTargetType.OneEnemy, new[] { BattleLogic.TryApplyDamage ,BattleLogic.RecoverFromPreviousDamage })
                 {
                     Power = 75,
                     Accuracy = 100
@@ -353,7 +355,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
                 };
                 _buffConfig.Add(15, tempBuff);
 
-                tempBuff = new CommonSkillTemplate(16, "Blaze", Int32.MaxValue, BattleLogic.DamageUpWhenHpDown, null, Constant.BuffExecutionTimeKey.CalculatingFinalDamage)
+                tempBuff = new CommonSkillTemplate(16, "Blaze", Int32.MaxValue, BattleLogic.IncreaseDamageWhenLowHp, null, Constant.BuffExecutionTimeKey.CalculatingFinalDamage)
                 {
                     Type = PokemonType.Fire
                 };
@@ -380,7 +382,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
                 tempBuff = new CommonSkillTemplate(18, "Solar Power Hp Down", Int32.MaxValue, BattleLogic.WeatherMatchSetHp, null, Constant.BuffExecutionTimeKey.EndOfRound);
                 _buffConfig.Add(18, tempBuff);
 
-                tempBuff = new CommonSkillTemplate(19, "Overgrow", Int32.MaxValue, BattleLogic.DamageUpWhenHpDown, null, Constant.BuffExecutionTimeKey.CalculatingFinalDamage)
+                tempBuff = new CommonSkillTemplate(19, "Overgrow", Int32.MaxValue, BattleLogic.IncreaseDamageWhenLowHp, null, Constant.BuffExecutionTimeKey.CalculatingFinalDamage)
                 {
                     Type = PokemonType.Grass
                 };

@@ -1,5 +1,6 @@
 using System;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ namespace Editor
             EditorGUILayout.LabelField(TargetPokemon.Name,  EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Lv."+ TargetPokemon.Level);
             EditorGUILayout.LabelField("Runtime ID: "+ TargetPokemon.RuntimeID);
+            EditorGUILayout.LabelField("Trainer ID: "+ TargetPokemon.TrainerID);
             EditorGUILayout.LabelField("Hp: " + TargetPokemon.GetHp() + "/" + TargetPokemon.HpMax);
             
             EditorGUILayout.LabelField("On Stage: "+ TargetPokemon.OnStage);

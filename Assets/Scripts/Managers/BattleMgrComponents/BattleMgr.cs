@@ -12,6 +12,7 @@ using Managers.BattleMgrComponents.BattlePlayables.Stages;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
 using UI;
 using UnityEngine;
 using Terrain = Enum.Terrain;
@@ -46,6 +47,8 @@ namespace Managers.BattleMgrComponents
         private Dictionary<string, object> _playerLog;
 
         public List<BattleStackItem> BattleStack;
+
+        public Dictionary<PokemonEssentialSystemManager, bool> SystemLoadingDic;
 
         //For editor only
 #if UNITY_EDITOR
@@ -107,7 +110,7 @@ namespace Managers.BattleMgrComponents
             _roundCount = 0;
         }
 
-        public void InitData(BasicPlayerInfo[] playerInfos, int maxAllowPokemonOnstage)
+        public async void InitData(BasicPlayerInfo[] playerInfos, int maxAllowPokemonOnstage)
         {
             _maxAllowPokemonOnStage = maxAllowPokemonOnstage;
             foreach (var playerInfo in playerInfos)
@@ -119,6 +122,11 @@ namespace Managers.BattleMgrComponents
             PokemonStageIndex2PlayerMapping = new ABattlePlayer[_maxAllowPokemonOnStage * PlayerInGame.Count];
             _playerLog = new Dictionary<string, object>();
             BattleStack = new List<BattleStackItem>();
+            SystemLoadingDic = new Dictionary<PokemonEssentialSystemManager, bool>();
+            foreach (PokemonEssentialSystemManager system in System.Enum.GetValues(typeof(PokemonEssentialSystemManager)))
+            {
+                SystemLoadingDic.Add(system, false);
+            }
             Debug.Log("[BattleMgr] There are " + _maxAllowPokemonOnStage * PlayerInGame.Count + " pokemons allow to be on the battlefield");
 
             LocalPlayer = PlayerInGame[Constant.PlayerInfo.LocalPlayerID];
@@ -137,16 +145,19 @@ namespace Managers.BattleMgrComponents
                 }
             }
 
+            //load essential manager
+            var pokemonMgr = PokemonMgr.Instance;
+
             EventMgr.Instance.AddListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
-            EventMgr.Instance.AddListener<Pokemon, int>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
-            EventMgr.Instance.AddListener<int, int>(Constant.EventKey.RequestSentPokemonOnStage, SentPokemonOnStage);
+            EventMgr.Instance.AddListener<Pokemon, int, int[]>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
+            EventMgr.Instance.AddListener<Pokemon, int>(Constant.EventKey.RequestSentPokemonOnStage, SentPokemonOnStage);
         }
 
         public void OnBattleEnd()
         {
             EventMgr.Instance.RemoveListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
-            EventMgr.Instance.RemoveListener<Pokemon, int>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
-            EventMgr.Instance.RemoveListener<int, int>(Constant.EventKey.RequestSentPokemonOnStage, SentPokemonOnStage);
+            EventMgr.Instance.RemoveListener<Pokemon, int, int[]>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
+            EventMgr.Instance.RemoveListener<Pokemon, int>(Constant.EventKey.RequestSentPokemonOnStage, SentPokemonOnStage);
             _curBattleRound = null;
         }
         
@@ -156,6 +167,18 @@ namespace Managers.BattleMgrComponents
                 return;
             Debug.Log("[BattleMgr] Set command text: " + text);
             await BattleScenePanelTwoPlayerUI.SetCommandText(text);
+        }
+
+        private async UniTask CheckManagerReady()
+        {
+            foreach (PokemonEssentialSystemManager manager in System.Enum.GetValues(typeof(PokemonEssentialSystemManager)))
+            {
+                while (!SystemLoadingDic[manager])
+                {
+                    Debug.LogWarning(manager + " haven't got ready");
+                    await UniTask.Delay(100);
+                }
+            }
         }
         
         // get set attributes
@@ -204,21 +227,38 @@ namespace Managers.BattleMgrComponents
         {
             return _curWeather;
         }
-        
+
+        public List<Pokemon> GetOnStageAlivePokemon()
+        {
+            List<Pokemon> result = new List<Pokemon>();
+            foreach (var pokemon in OnStagePokemon)
+            {
+                if (pokemon is { IsFaint: false })
+                {
+                    result.Add(pokemon);
+                }
+            }
+
+            return result;
+        }
+
         // playables
 
-        public void StartFirstRound()
+        public async void StartFirstRound()
         {
+            await CheckManagerReady();
+            BattleScenePanelTwoPlayerUI.SetPlayerInfo();
             _curBattleRound = new BattleRound(_roundCount);
 
             for (int i = 0; i < OnStagePokemon.Length; i++)
             {
-                SentPokemonOnStage(-1, i);
+                SentPokemonOnStage(null, i);
             }
 
             _curBattleRound.Status = BattleRoundStatus.Running;
             _curBattleRound.ExecuteBattleStage();
         }
+        
         public async void EndOfCurRound()
         {
             await BuffMgr.Instance.Update();
@@ -261,7 +301,7 @@ namespace Managers.BattleMgrComponents
                 _curBattleRound.ExecuteBattleStage();
         }
 
-        private async void LoadPokemonSkill(Pokemon pokemon, int skillIndex)
+        private async void LoadPokemonSkill(Pokemon pokemon, int skillIndex, int[] targetIndexes)
         {
             var result = new CommonResult();
             result.LoadSkill = skillIndex;
@@ -269,8 +309,7 @@ namespace Managers.BattleMgrComponents
             
 
             CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(pokemon.GetSkills()[result.LoadSkill]);
-            //pre select target, might be no one on stage, in this case, 
-            int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
+
             pokemon.ConsumePpByIndex(result.LoadSkill);
             var playable = new RunTimeSkillBase(template, pokemon, targetIndexes);
             playable.Available = result.CanLoadSkill;
@@ -279,31 +318,50 @@ namespace Managers.BattleMgrComponents
             EventMgr.Instance.Dispatch(Constant.EventKey.BattleCommandSent, PlayerInGame[pokemon.TrainerID], pokemon);
         }
 
-        //only use when you are super condifent with the id
-        public async void LoadPokemonSkillDirectly(Pokemon pokemon, int skillIndex)
+        //only use when you are super confident with the id
+        public async void LoadPokemonSkillDirectly(Pokemon pokemon, int skillIndex, int[] targetIndexes = null, SkillTargetType targetType = SkillTargetType.None, PlayablePriority priority = PlayablePriority.None)
         {
-            var result = new CommonResult();
-            result.LoadSkill = skillIndex;
+            var result = new CommonResult
+            {
+                LoadSkill = skillIndex
+            };
             result = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeLoadPokemonSkill, result, pokemon);
 
             CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
 
-            //pre select target, might be no one on stage, in this case, 
-            int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
+            if (targetIndexes == null)
+            {
+                if (targetType != SkillTargetType.None)
+                {
+                    targetIndexes = await TryAutoGetTarget(pokemon, targetType);
+                }
+                else
+                {
+                    switch (template.TargetType)
+                    {
+                        case SkillTargetType.OneEnemy:
+                        case SkillTargetType.FirstEnemy:
+                        case SkillTargetType.FirstAvailableEnemy:
+                            targetIndexes = await TryAutoGetTarget(pokemon, SkillTargetType.FirstAvailableEnemy);
+                            break;
+                        case SkillTargetType.OneTeammate:
+                        case SkillTargetType.FirstTeammate:
+                        case SkillTargetType.FirstAvailableTeammate:
+                            targetIndexes = await TryAutoGetTarget(pokemon, SkillTargetType.FirstTeammate);
+                            break;
+                        default:
+                            targetIndexes = await TryAutoGetTarget(pokemon, template.TargetType);
+                            break;
+                    }
+                }
+            }
+            
             var playable = new RunTimeSkillBase(template, pokemon, targetIndexes);
             playable.Available = result.CanLoadSkill;
-            _curBattleRound.AddBattlePlayables(playable);
-        }
-        
-        public async void LoadPokemonSkillDirectlyImm(Pokemon pokemon, int skillIndex)
-        {
-
-            CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(skillIndex);
-
-            //pre select target, might be no one on stage, in this case, 
-            int[] targetIndexes = await RoughGetTarget(pokemon, template.TargetType);
-            var playable = new RunTimeSkillBase(template, pokemon, targetIndexes);
-            playable.Priority = (int)PlayablePriority.SkillImm;
+            if (priority != PlayablePriority.None)
+            {
+                playable.Priority = (int)PlayablePriority.SkillImm;
+            }
             _curBattleRound.AddBattlePlayables(playable);
         }
 
@@ -389,19 +447,12 @@ namespace Managers.BattleMgrComponents
             RemoveSkillPlayablesBySource(pokemon);
             await BuffMgr.Instance.RemoveAllBuffByTarget(pokemon);
             pokemon.OnStage = false;
-            if (PlayerInGame[pokemon.TrainerID] == LocalPlayer)
-            {
-                BattleScenePanelTwoPlayerUI.selfPokemonInfo.UnSetPokemonInfo();
-            }
-            else
-            {
-                BattleScenePanelTwoPlayerUI.opPokemonInfo.UnSetPokemonInfo();
-            }
+            BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(pokemonStageIndex).UnSetPokemonInfo();
 
             OnStagePokemon[pokemonStageIndex] = null;
         }
 
-        private async void SentPokemonOnStage(int pokemonIndex, int onStagePosition)
+        private async void SentPokemonOnStage(Pokemon pokemonTobeOnStage, int onStagePosition)
         {
             var player = PokemonStageIndex2PlayerMapping[onStagePosition];
             var targetPokemon = OnStagePokemon[onStagePosition];
@@ -410,20 +461,20 @@ namespace Managers.BattleMgrComponents
                 await WithDrawPokemon(onStagePosition);
             }
 
-            if (pokemonIndex == -1)
+            if (pokemonTobeOnStage == null)
             {
-                pokemonIndex = player.GetFirstPokemonCanSentIndex();
-                if (pokemonIndex == -1)
+                pokemonTobeOnStage = player.GetFirstPokemonCanSent();
+                if (pokemonTobeOnStage == null)
                     return;
             }
 
-            player.Pokemons[pokemonIndex].OnStage = true;
-            _curBattleRound.AddBattlePlayables(new BpDebut(player.PlayerInfo, pokemonIndex, onStagePosition));
+            pokemonTobeOnStage.OnStage = true;
+            _curBattleRound.AddBattlePlayables(new BpDebut(player.PlayerInfo, pokemonTobeOnStage, onStagePosition));
             
             EventMgr.Instance.Dispatch(Constant.EventKey.BattleCommandSent, player, targetPokemon);
             EventMgr.Instance.Dispatch(Constant.EventKey.BattlePokemonForceChangeCommandSent, player);
         }
-        public async UniTask<int[]> RoughGetTarget(Pokemon source, SkillTargetType type)
+        public async UniTask<int[]> TryAutoGetTarget(Pokemon source, SkillTargetType type)
         {
             System.Diagnostics.Debug.Assert(source != null);
             switch (type)
@@ -447,16 +498,76 @@ namespace Managers.BattleMgrComponents
                     }
                     else
                     {
-                        // open a UI for player to select, it should be impossible to reach here for now
-                        await UniTask.Delay(BattleMgr.Instance.AwaitTime);
+                        return null;
                     }
-
-                    break;
                 }
                 case SkillTargetType.All:
                 {
                     return Enumerable.Range(0, OnStagePokemon.Length).ToArray();
                 }
+                case SkillTargetType.FirstAvailableEnemy:
+                {
+                    for (int i = 0; i < OnStagePokemon.Length; i++)
+                    {
+                        if (OnStagePokemon[i] != null && PlayerInGame[OnStagePokemon[i].TrainerID].PlayerInfo.teamID != PlayerInGame[source.TrainerID].PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+                    for (int i = 0; i < PokemonStageIndex2PlayerMapping.Length; i++)
+                    {
+                        if (PokemonStageIndex2PlayerMapping[i].PlayerInfo.teamID != LocalPlayer.PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+
+                    throw new Exception("Impossible to reach here!");
+                }
+                case SkillTargetType.FirstEnemy:
+                {
+                    for (int i = 0; i < PokemonStageIndex2PlayerMapping.Length; i++)
+                    {
+                        if (PokemonStageIndex2PlayerMapping[i].PlayerInfo.teamID != LocalPlayer.PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+
+                    throw new Exception("Impossible to reach here!");
+                }
+                case SkillTargetType.FirstAvailableTeammate:
+                {
+                    for (int i = 0; i < OnStagePokemon.Length; i++)
+                    {
+                        if (OnStagePokemon[i] != null && PlayerInGame[OnStagePokemon[i].TrainerID].PlayerInfo.teamID == PlayerInGame[source.TrainerID].PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+                    for (int i = 0; i < PokemonStageIndex2PlayerMapping.Length; i++)
+                    {
+                        if (PokemonStageIndex2PlayerMapping[i].PlayerInfo.teamID != LocalPlayer.PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+
+                    throw new Exception("Impossible to reach here!");
+                }
+                case SkillTargetType.FirstTeammate:
+                {
+                    for (int i = 0; i < PokemonStageIndex2PlayerMapping.Length; i++)
+                    {
+                        if (PokemonStageIndex2PlayerMapping[i].PlayerInfo.teamID == LocalPlayer.PlayerInfo.teamID)
+                        {
+                            return new[] { i };
+                        }
+                    }
+
+                    throw new Exception("Impossible to reach here!");
+                }
+                        
             }
 
             throw new Exception("it should be impossible to reach here for now");

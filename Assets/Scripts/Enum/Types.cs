@@ -65,6 +65,10 @@ namespace Enum
         AllTeammate,
         All,
         AllExceptSelf,
+        FirstAvailableEnemy,
+        FirstEnemy,
+        FirstAvailableTeammate,
+        FirstTeammate,
         None,
     }
 
@@ -104,6 +108,7 @@ namespace Enum
 
     public enum PlayablePriority
     {
+        None,
         HeartBeat,
         ForceAddPokemon,
         EndOfRound,
@@ -136,5 +141,11 @@ namespace Enum
         Grassy,
         Misty,
         Psychic
+    }
+
+    public enum PokemonEssentialSystemManager
+    {
+        PokemonBattlePanel,
+        PokemonMgr
     }
 }

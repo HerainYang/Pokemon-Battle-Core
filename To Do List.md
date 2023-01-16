@@ -22,3 +22,14 @@ Unify all result type into `CommonResult`
 
 ## 2v2 Battle scene
 
+loadskill callback change param
+
+## More GamePlay
+
+### Octopath Traveler
+
+### DQ11S
+
+### Yu-Gi-Oh!
+
+### Heartstone BattleGround

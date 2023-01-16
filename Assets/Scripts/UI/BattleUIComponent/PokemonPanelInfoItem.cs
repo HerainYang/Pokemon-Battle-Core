@@ -13,15 +13,13 @@ using UnityEngine.UI;
 [CanEditMultipleObjects]
 public class PokemonPanelInfoItem : MonoBehaviour
 {
-    private int _index;
-    private int _targetPosition;
-    private ABattlePlayer _curPlayer;
-    private Pokemon _curPokemon;
-    private bool _forceChange;
+    public Pokemon ThisPokemon;
 
     [SerializeField] private Color valid;
     [SerializeField] private Color faint;
     private Color _current = Color.yellow;
+    
+    private Color _selected = Color.cyan;
 
     [SerializeField] private Image bg;
 
@@ -29,21 +27,13 @@ public class PokemonPanelInfoItem : MonoBehaviour
     [SerializeField] private RectTransform hpRemain;
     private Image _hp;
     [SerializeField] private Text status;
-    [SerializeField] private Button hotArea;
+    public Button HotArea;
 
     private Color _max = Color.green;
     private Color _min = Color.red;
     private Color _def;
 
-    private void OnEnable()
-    {
-        hotArea.onClick.AddListener(SentPokemonChangeRequest);
-    }
-
-    private void OnDisable()
-    {
-        hotArea.onClick.RemoveListener(SentPokemonChangeRequest);
-    }
+    public bool Selected = false;
 
     private void Awake()
     {
@@ -51,40 +41,31 @@ public class PokemonPanelInfoItem : MonoBehaviour
         _hp = hpRemain.GetComponent<Image>();
     }
 
-    public void Init(int index, int targetPosition, ABattlePlayer curPlayer, Pokemon curPokemon, bool forceChange)
+    public void Init(Pokemon thisPokemon, int targetPosition)
     {
-        _index = index;
-        _targetPosition = targetPosition;
-        _curPlayer = curPlayer;
-        _curPokemon = curPokemon;
-        _forceChange = forceChange;
-        bg.color = _curPlayer.Pokemons[index].IsFaint ? faint : valid;
-        if (Equals(curPokemon, _curPlayer.Pokemons[index]))
+        ThisPokemon = thisPokemon;
+        SetColor(false);
+        float percentage = ((float)ThisPokemon.GetHp() / ThisPokemon.HpMax);
+        hpRemain.sizeDelta = new Vector2(percentage * 250, hpRemain.sizeDelta.y);
+        _hp.color = _min + percentage * _def;
+    }
+
+    public void SetColor(bool selected)
+    {
+        if (selected)
+        {
+            bg.color = _selected;
+            return;
+        }
+        bg.color = ThisPokemon.IsFaint ? faint : valid;
+        if (ThisPokemon.OnStage && !ThisPokemon.IsFaint && ThisPokemon.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
         {
             bg.color = _current;
         }
-        float percentage = ((float)_curPlayer.Pokemons[index].GetHp() / _curPlayer.Pokemons[index].HpMax);
-        hpRemain.sizeDelta = new Vector2(percentage * 250, hpRemain.sizeDelta.y);
-        _hp.color = _min + percentage * _def;
     }
 
     public Image GetImg()
     {
         return pokeImg;
-    }
-
-    private async void SentPokemonChangeRequest()
-    {
-        if (!_curPlayer.Pokemons[_index].IsFaint && !_curPlayer.Pokemons[_index].OnStage)
-        {
-            UIWindowsManager.Instance.HideUIWindow("PokemonSelectPanel");
-            if (_curPokemon != null)
-            {
-                await BattleMgr.Instance.SetCommandText("Come back! " + _curPokemon.Name);
-                await UniTask.Delay(BattleMgr.Instance.AwaitTime);
-            }
-            EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, _index, _targetPosition);
-        }
-
     }
 }

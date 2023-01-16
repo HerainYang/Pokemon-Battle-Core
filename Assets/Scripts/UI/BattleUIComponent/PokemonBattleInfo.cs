@@ -14,6 +14,7 @@ namespace UI.BattleUIComponent
         public Text pokemonName;
         public Text pokemonAttribute;
         public RectTransform hp;
+        public RectTransform hpBackGround;
 
         private Pokemon _curPokemon;
         
@@ -66,10 +67,7 @@ namespace UI.BattleUIComponent
 
         public async UniTask SetPokemonImg(string imgKey)
         {
-            await UIHelper.SetImageSprite(imgKey, pokemonImg, true).ContinueWith((() =>
-            {
-                PokemonDebutAnimate();
-            }));
+            await UIHelper.SetImageSprite(imgKey, pokemonImg, true).ContinueWith((PokemonDebutAnimate));
         }
         
         public void SetPokemonImgActive(bool active)
@@ -100,17 +98,24 @@ namespace UI.BattleUIComponent
             }
             UniTask.Void((async () =>
             {
-                float targetLength = ((float)(hpTo) / target.GetHpMax()) * 400;
+                float maxLength = hpBackGround.rect.width;
+                float targetLength = ((float)(hpTo) / target.GetHpMax()) * hpBackGround.rect.width;
                 var t = targetLength < hp.rect.width ? -1f : 1f;
                 var diff = Math.Abs(hp.rect.width - targetLength);
                 int delayTime = (int) ((BattleMgr.Instance.AwaitTime - 200) / (diff / 1));
+                int alreadyDelayTime = 0;
                 Rect hpRect = hp.rect;
                 while (Math.Abs(hp.rect.width - targetLength) > 1)
                 {
-                    var length = hp.rect.width + t > 400 ? 400 : hp.rect.width + t;
+                    var length = hp.rect.width + t > maxLength ? maxLength : hp.rect.width + t;
                     length = length < 0 ? 0 : length;
                     hp.sizeDelta = new Vector2(length, hpRect.height);
                     await UniTask.Delay(delayTime);
+                    alreadyDelayTime += delayTime;
+                    if (alreadyDelayTime >= BattleMgr.Instance.AwaitTime)
+                    {
+                        break;
+                    }
                 }
             }));
         }

@@ -44,10 +44,9 @@ namespace UI
 
         private void StartBtnBehavior()
         {
-            UIWindowsManager.Instance.ShowUIWindowAsync("BattleScenePanel").ContinueWith((o =>
+            UIWindowsManager.Instance.ShowUIWindowAsync("BattleScenePanel").ContinueWith((_ =>
             {
-                BattleScenePanelTwoPlayer battleScenePanelTwoPlayer = o.GetComponent<BattleScenePanelTwoPlayer>();
-                battleScenePanelTwoPlayer.SetPlayerInfo();
+                BattleMgr.Instance.StartFirstRound();
                 UIWindowsManager.Instance.HideUIWindow("BattleStartPanel");
             }));
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.PokemonLogic

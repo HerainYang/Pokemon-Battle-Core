@@ -307,7 +307,7 @@ MonoBehaviour:
   playerInfos:
   - playerID: p1
     name: Herain
-    pokemonIDs: 040000000100000084000000190000006e0300005e000000
+    pokemonIDs: 010000000400000084000000190000006e0300005e000000
     isAI: 0
     teamID: 0
     items: 

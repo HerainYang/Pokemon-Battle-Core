@@ -87,17 +87,17 @@ namespace Managers.BattleMgrComponents.BattlePlayer
             return count;
         }
 
-        public int GetFirstPokemonCanSentIndex()
+        public Pokemon GetFirstPokemonCanSent()
         {
             for (int i = 0; i < Pokemons.Count; i++)
             {
                 if (!Pokemons[i].IsFaint && !Pokemons[i].OnStage)
                 {
-                    return i;
+                    return Pokemons[i];
                 }
             }
-
-            return -1;
+            
+            return null;
         }
     }
 }

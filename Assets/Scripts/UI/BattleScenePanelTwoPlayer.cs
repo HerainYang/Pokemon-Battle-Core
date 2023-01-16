@@ -8,6 +8,7 @@ using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
 using UI.BattleUIComponent;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -29,8 +30,14 @@ namespace UI
         [SerializeField]
         private Text[] btnTexts;
 
-        [Header("Pokemon Info")] public PokemonBattleInfo selfPokemonInfo;
-        public PokemonBattleInfo opPokemonInfo;
+        [Header("Pokemon Info")] 
+        // public PokemonBattleInfo selfPokemonInfo;
+        // public PokemonBattleInfo opPokemonInfo;
+
+        public Transform selfPokemonHorizontalLayout;
+        public Transform opPokemonHorizontalLayout;
+
+        public Dictionary<int, PokemonBattleInfo> PokemonBattleInfoDic;
 
         [Header("Command Mask")] [SerializeField]
         private GameObject commandMask;
@@ -52,6 +59,7 @@ namespace UI
         //UI
         private List<Grayout> _selfBalls;
         private List<Grayout> _opBalls;
+        [SerializeField] private GameObject _pokemonSelectPanel;
 
         //Round Data
         private ABattlePlayer _curPlayer;
@@ -60,10 +68,9 @@ namespace UI
         private CommandRequestType _requestType;
 
 
-        private void Awake()
+        private async void Awake()
         {
             BattleMgr.Instance.BattleScenePanelTwoPlayerUI = this;
-            BattleMgr.Instance.StartFirstRound();
 
             _selfBalls = new List<Grayout>();
             _opBalls = new List<Grayout>();
@@ -73,7 +80,28 @@ namespace UI
                 var i1 = i;
                 btns[i].onClick.AddListener(delegate { SendLoadRequest(i1); });
             }
-            
+
+            PokemonBattleInfoDic = new Dictionary<int, PokemonBattleInfo>();
+
+            // generate pokemon battle information display area for every possible pokemon standing area
+            var handle = Addressables.LoadAssetAsync<GameObject>("PokemonBattleInfo");
+            await handle;
+            if (handle.Result == null)
+            {
+                Debug.LogError("Cannot Load PokemonBattleInfo");
+            }
+            else
+            {
+                for (int i = 0;  i< BattleMgr.Instance.PokemonStageIndex2PlayerMapping.Length;i++)
+                {
+                    var player = BattleMgr.Instance.PokemonStageIndex2PlayerMapping[i];
+                    GameObject o;
+                    o = Instantiate(handle.Result, player == BattleMgr.Instance.LocalPlayer ? selfPokemonHorizontalLayout : opPokemonHorizontalLayout);
+                    PokemonBattleInfoDic.Add(i, o.GetComponent<PokemonBattleInfo>());
+                }
+            }
+
+            BattleMgr.Instance.SystemLoadingDic[PokemonEssentialSystemManager.PokemonBattlePanel] = true;
         }
 
         private void OnEnable()
@@ -94,6 +122,11 @@ namespace UI
             }
         }
 
+        public PokemonBattleInfo GetPokemonBattleInfo(int pokemonStageIndex)
+        {
+            return PokemonBattleInfoDic[pokemonStageIndex];
+        }
+
         private void HideCommandMask()
         {
             commandMask.SetActive(false);
@@ -109,6 +142,7 @@ namespace UI
 
         public void StartCommandStage(ABattlePlayer player, Pokemon pokemon)
         {
+            Debug.LogWarning("player turn " + pokemon.Name);
             _curPlayer = player;
             _curPokemon = pokemon;
             HideCommandMask();
@@ -119,7 +153,7 @@ namespace UI
         {
             _curPlayer = player;
             _curPokemon = null;
-            ShowSelectPanel(onStagePosition, true);
+            ShowSelectPanel(onStagePosition, true, CommandRequestType.Pokemons);
         }
 
         public async UniTask SetCommandText(string text)
@@ -174,15 +208,25 @@ namespace UI
             _requestType = CommandRequestType.Skills;
         }
 
-        private void ShowSelectPanel(int onStagePosition, bool forceChange)
+        private void ShowSelectPanel(int onStagePosition, bool forceChange, CommandRequestType requestType, int skillIndex = 0)
         {
-            UIWindowsManager.Instance.ShowUIWindowAsync("PokemonSelectPanel").ContinueWith((o =>
+            _pokemonSelectPanel.SetActive(true);
+            switch (requestType)
             {
-                o.GetComponent<PokemonSelectPanel>().Init(_curPlayer, _curPokemon, onStagePosition, forceChange);
-            }));
+                case CommandRequestType.Pokemons:
+                    _pokemonSelectPanel.GetComponent<PokemonSelectPanel>().Init(onStagePosition, forceChange, requestType, _curPlayer.Pokemons);
+                    break;
+                case CommandRequestType.Skills:
+                    List<Pokemon> OnstageNotNullPokemon = BattleMgr.Instance.GetOnStageAlivePokemon();
+
+                    _pokemonSelectPanel.GetComponent<PokemonSelectPanel>().Init(onStagePosition, forceChange, requestType, OnstageNotNullPokemon, skillIndex);
+                    break;
+                default:
+                    throw new NotImplementedException("impossible to reach here");
+            }
         }
 
-        private void SendLoadRequest(int index)
+        private async void SendLoadRequest(int index)
         {
             if (_requestType == CommandRequestType.Default)
             {
@@ -192,7 +236,7 @@ namespace UI
                 }
                 else if (index == 1)
                 {
-                    ShowSelectPanel(BattleMgr.Instance.GetPokemonOnstagePosition(_curPokemon), false);
+                    ShowSelectPanel(BattleMgr.Instance.GetPokemonOnstagePosition(_curPokemon), false, CommandRequestType.Pokemons);
                 }
             }
             else if (_requestType == CommandRequestType.Skills)
@@ -204,7 +248,15 @@ namespace UI
                 }
 
                 DefaultBs();
-                EventMgr.Instance.Dispatch(Constant.EventKey.RequestLoadPokemonSkill, _curPokemon, index);
+                int[] targets = await BattleMgr.Instance.TryAutoGetTarget(_curPokemon, PokemonMgr.Instance.GetSkillTemplateByID(_curPokemon.GetSkills()[index]).TargetType);
+                if (targets == null) // need manually select
+                {
+                    ShowSelectPanel(BattleMgr.Instance.GetPokemonOnstagePosition(_curPokemon), false, CommandRequestType.Skills, index);
+                }
+                else
+                {
+                    EventMgr.Instance.Dispatch(Constant.EventKey.RequestLoadPokemonSkill, _curPokemon, index, targets);
+                }
             }
         }
 

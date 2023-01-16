@@ -9,35 +9,29 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
     public class BpDebut : ABattlePlayable
     {
         private BasicPlayerInfo _info;
-        private int _pokemonIndex;
+        private Pokemon _pokemonToBeOnStage;
         private int _onStagePosition;
 
 #if UNITY_EDITOR
         public Pokemon GetPokemonInstance()
         {
-            return BattleMgr.Instance.PlayerInGame[_info.playerID].Pokemons[_pokemonIndex];
+            return _pokemonToBeOnStage;
         }
 #endif
 
-        public BpDebut(BasicPlayerInfo info, int pokemonIndex, int onStagePosition) : base((int)PlayablePriority.Debut)
+        public BpDebut(BasicPlayerInfo info, Pokemon pokemonToBeOnStage, int onStagePosition) : base((int)PlayablePriority.Debut)
         {
             _info = info;
-            _pokemonIndex = pokemonIndex;
+            _pokemonToBeOnStage = pokemonToBeOnStage;
             _onStagePosition = onStagePosition;
         }
         
         public override async void Execute()
         {
-            Pokemon pokemonBasicInfoInstance = BattleMgr.Instance.PlayerInGame[_info.playerID].Pokemons[_pokemonIndex];
+            Pokemon pokemonBasicInfoInstance = _pokemonToBeOnStage;
             pokemonBasicInfoInstance.OnStage = true;
-            if (_info.isAI)
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonInfo(pokemonBasicInfoInstance);
-            }
-            else
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonInfo(pokemonBasicInfoInstance);
-            }
+            BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(_onStagePosition).SetPokemonInfo(pokemonBasicInfoInstance);
+
             await pokemonBasicInfoInstance.Attribute.InitAttribute(pokemonBasicInfoInstance);
             BattleMgr.Instance.OnStagePokemon[_onStagePosition] = pokemonBasicInfoInstance;
             CommonResult result = new CommonResult();

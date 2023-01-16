@@ -41,9 +41,9 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
                 _commandWaitList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             }
 
-            foreach (var player in _commandWaitList)
+            foreach (var player in BattleMgr.Instance.PlayerInGame)
             {
-                player.Item1.ExecuteCommandStage();
+                player.Value.ExecuteCommandStage();
             }
         }
 
@@ -51,7 +51,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         {
             // _commandWaitList.Remove(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             _receiveList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
-            Debug.Log("[BPCommandStage] Receive Command From " + player.PlayerInfo.name + " of pokemon " + pokemon.RuntimeID + ", remains " + _commandWaitList.Count + " to wait!");
+            Debug.Log("[BPCommandStage] Receive Command From " + player.PlayerInfo.name + " of pokemon " + pokemon.RuntimeID + ", remains " + (_commandWaitList.Count - _receiveList.Count) + " to wait!");
             if (_commandWaitList.Count == _receiveList.Count)
             {
                 OnDestroy();

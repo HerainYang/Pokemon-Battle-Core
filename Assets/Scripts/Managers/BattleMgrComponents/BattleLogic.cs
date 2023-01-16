@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Enum;
 using JetBrains.Annotations;
@@ -7,6 +8,7 @@ using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -16,16 +18,6 @@ namespace Managers.BattleMgrComponents
 {
     public class BattleLogic
     {
-        public static void CheckSkillValidation(RunTimeSkillBase skill)
-        {
-            if (skill.Template.ProcedureFunctions == null)
-                return;
-            foreach (var func in skill.Template.ProcedureFunctions)
-            {
-                skill.Procedure.Add(func);
-            }
-        }
-
         //Common
         private static bool ProbTrigger(float prob)
         {
@@ -335,16 +327,17 @@ namespace Managers.BattleMgrComponents
             }
         }
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> OnlyForTest = async (source, _, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> OnlyForTest = async (input, source, _, _) =>
         {
             await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(source.GetName() + " doesn't do anything");
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryDamageMaxHpByPercentage = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryDamageMaxHpByPercentage = async (input, source, target, template) =>
         {
-            await DamageMaxHpByPercentage(source, target, template.PercentageDamage, template);
-            return true;
+            int damage = await DamageMaxHpByPercentage(source, target, template.PercentageDamage, template);
+            input.Damage = damage;
+            return input;
         };
 
         private static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> ApplyDamage = async (source, target, template) =>
@@ -393,56 +386,57 @@ namespace Managers.BattleMgrComponents
             }
         }
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryApplyDamage = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryApplyDamage = async (input, source, target, template) =>
         {
             var result = await ApplyDamage(source, target, template);
             int damage = result.Damage;
+            input.Damage = damage;
             BattleMgr.Instance.BattleStack[^1].Damages ??= new Dictionary<Pokemon, int>();
             BattleMgr.Instance.BattleStack[^1].Damages.Add(target, damage);
-            return result.ShouldContinueSkill;
+            return result.ShouldContinueSkill? input : null;
         };
 
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> FocusPunchCharge = async (source, _, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> FocusPunchCharge = async (input, source, target, _) =>
         {
             await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(source.Name + " starts charging");
             await BuffMgr.Instance.AddBuff(source, source, 3);
-            BattleMgr.Instance.LoadPokemonSkillDirectly(source, 10264);
-            return true;
+            BattleMgr.Instance.LoadPokemonSkillDirectly(source, 10264, new []{BattleMgr.Instance.GetPokemonOnstagePosition(target)});
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddBuffByProb = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddBuffByProb = async (input, source, target, template) =>
         {
             var recorder = await TryAddBuff(source, target, template, template.AddBuffID);
-            return recorder != null;
+            return recorder != null? input : null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddGuard = async (source, target, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddGuard = async (input, source, target, _) =>
         {
             if (BuffMgr.Instance.Exist(target, 1))
             {
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " already guard");
-                return false;
+                return null;
             }
 
             if (BattleMgr.Instance.IsLastSkill())
             {
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " fail to guard it self");
-                return false;
+                return null;
             }
 
             await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " guard itself");
             await BuffMgr.Instance.AddBuff(source, target, 1);
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddBuffDirect = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddBuffDirect = async (input, source, target, template) =>
         {
             await MustAddBuff(source, target, template, template.AddBuffID);
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddWeather = async (_, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddWeather = async (input, _, target, template) =>
         {
             int weatherLength = 3;
             
@@ -456,14 +450,13 @@ namespace Managers.BattleMgrComponents
                 recorder.EffectLastRound = weatherLength;
                 recorder.WeatherType = template.WeatherType;
 
-                int[] indices = await BattleMgr.Instance.RoughGetTarget(target, SkillTargetType.All);
+                int[] indices = Enumerable.Range(0, BattleMgr.Instance.OnStagePokemon.Length).ToArray();
                 List<Pokemon> pokemons = await FindTarget(indices);
                 foreach (var pokemon in pokemons)
                 {
                     switch (template.WeatherType)
                     {
                         case Weather.HarshSunlight:
-                            Debug.LogWarning("Add buffs!");
                             var buff = await BuffMgr.Instance.AddBuff(null, pokemon, 6, false, true);
                             buff.EffectLastRound = weatherLength;
                             buff.SType = PokemonType.Fire;
@@ -478,12 +471,14 @@ namespace Managers.BattleMgrComponents
                             throw new NotImplementedException();
                     }
                 }
+
+                return input;
             }
 
-            return true;
+            return null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryChangePokemonStat = async (_, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryChangePokemonStat = async (input, _, target, template) =>
         {
             for (int i = 0; i < template.PokemonStatType.Length; i++)
             {
@@ -491,35 +486,31 @@ namespace Managers.BattleMgrComponents
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.Name + "'s " + template.PokemonStatType[i] + " change " + template.PokemonStatPoint[i]);
             }
 
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddLeechSeed = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddLeechSeed = async (input, source, target, template) =>
         {
-            await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("A seed is planted on " + target.GetName());
             var recorder = await TryAddBuff(source, target, template, 7);
             if (recorder != null)
             {
+                await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("A seed is planted on " + target.GetName());
                 recorder.SourceIndex = BattleMgr.Instance.GetPokemonOnstagePosition(source);
-                return true;
+                return input;
             }
 
-            return false;
+            return null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryGigaDrain = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> RecoverFromPreviousDamage = async (input, source, target, template) =>
         {
-            var result = await ApplyDamage(source, target, template);
-            if (result.ShouldContinueSkill == false)
-            {
-                return false;
-            }
+            int recoverHp = (int)(-input.Damage * 0.5f);
 
-            await TrySetHp((int)(-result.Damage * 0.5f), source, source, template);
-            return true;
+            await TrySetHp(recoverHp, source, source, template);
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TrySynthesis = async (source, _, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TrySynthesis = async (input, source, _, template) =>
         {
             float recoverPercentage = template.PercentageDamage;
             if (BattleMgr.Instance.GetWeather() == Weather.HarshSunlight)
@@ -528,33 +519,33 @@ namespace Managers.BattleMgrComponents
             }
 
             await TrySetHp((int)(source.HpMax * recoverPercentage), source, source, template);
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryAddParalysis = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryAddParalysis = async (input, source, target, template) =>
         {
             if (ProbTrigger(template.SpecialEffectProb))
             {
                 if (BuffMgr.Instance.Exist(target, 8) || BuffMgr.Instance.Exist(target, 9))
                 {
                     await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " already get paralysis!");
-                    return false;
+                    return null;
                 }
                 var task0 = await MustAddBuff(source, target, template, 8);
                 var task1 = await MustAddBuff(source, target, template, 9);
                 if (task0 == null && task1 == null)
                 {
-                    return false;
+                    return null;
                 }
 
                 await BattleMgr.Instance.SetCommandText(target.Name + " get paralysis");
-                return true;
+                return input;
             }
 
-            return false;
+            return null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> HiddenPower = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> HiddenPower = async (input, source, target, template) =>
         {
             PokemonType targetType = source.Type;
             if (math.abs(PokemonMgr.Instance.GetTypeResistance((int)targetType, (int)target.Type) - 2) > 0.01)
@@ -572,10 +563,10 @@ namespace Managers.BattleMgrComponents
             CommonSkillTemplate adaptiveTemplate = CommonSkillTemplate.CopySkill(template);
             adaptiveTemplate.Type = targetType;
             var result = await ApplyDamage(source, target, adaptiveTemplate);
-            return result.ShouldContinueSkill;
+            return result.ShouldContinueSkill ? input : null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> ProbChangeStat = async (_, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> ProbChangeStat = async (input, _, target, template) =>
         {
             if (ProbTrigger(template.SpecialEffectProb))
             {
@@ -587,21 +578,13 @@ namespace Managers.BattleMgrComponents
             }
 
             await UniTask.Yield();
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> Transform = async (source, target, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> Transform = async (input, source, target, _) =>
         {
-            if (source.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
-            {
-                await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonImg(target.ImageKey);
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetAttributeText(target.Attribute.Name);
-            }
-            else
-            {
-                await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonImg(target.ImageKey);
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetAttributeText(target.Attribute.Name);
-            }
+            await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(source)).SetPokemonImg(target.ImageKey);
+            BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(source)).SetAttributeText(target.Attribute.Name);
 
             source.Attack = target.Attack;
             source.Defence = target.Defence;
@@ -630,10 +613,10 @@ namespace Managers.BattleMgrComponents
 
             await BuffMgr.Instance.AddBuff(source, source, 10);
 
-            return true;
+            return input;
         };
         
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryPlayRoughDeBuff = async (_, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryPlayRoughDeBuff = async (input, _, target, template) =>
         {
             if (ProbTrigger(template.SpecialEffectProb))
             {
@@ -651,60 +634,49 @@ namespace Managers.BattleMgrComponents
                 }
             }
 
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> SetHidePokemon = async (source, _, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> SetHidePokemon = async (input, source, target, _) =>
         {
             await BuffMgr.Instance.AddBuff(source, source, 12);
-            await BuffMgr.Instance.AddBuff(source, source, 13);
-            if (source.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonImgActive(false);
-            }
-            else
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonImgActive(false);
-            }
+            BuffRecorder recorder = await BuffMgr.Instance.AddBuff(source, source, 13);
+
+            recorder.SkillTargets = new[] { BattleMgr.Instance.GetPokemonOnstagePosition(target) };
+            BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(source)).SetPokemonImgActive(false);
+            
             
             await BattleMgr.Instance.SetCommandText(source.Name + " hides itself!");
 
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> SetPokemonAppear = async (source, _, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> SetPokemonAppear = async (input, source, _, _) =>
         {
             BuffMgr.Instance.RemoveBuffByTarget(source, 12);
             BuffMgr.Instance.RemoveBuffByTarget(source, 13);
-            if (source.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonImgActive(true);
-            }
-            else
-            {
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonImgActive(true);
-            }
+            BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(source)).SetPokemonImgActive(true);
 
             await BattleMgr.Instance.SetCommandText(source.Name + " appears!");
 
-            return true;
+            return input;
         };
         
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> AddTaunt = async (source, target, _) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> AddTaunt = async (input, source, target, _) =>
         {
             if (BuffMgr.Instance.Exist(target, 14))
             {
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " already get taunt");
-                return true;
+                return null;
             }
 
             await BuffMgr.Instance.AddBuff(source, target, 14);
             await BattleMgr.Instance.SetCommandText(target.Name + " can only use attack skill!");
 
-            return true;
+            return input;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryCounter = async (source, _, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryCounter = async (input, source, _, template) =>
         {
             int lastSkillIndex = Int32.MinValue;
             foreach (var pokemon in BattleMgr.Instance.OnStagePokemon)
@@ -736,15 +708,15 @@ namespace Managers.BattleMgrComponents
             {
                 await BattleMgr.Instance.SetCommandText("Counter back " + (BattleMgr.Instance.BattleStack[lastSkillIndex].Damages[source] * 2) + " damage!");
                 await TrySetHp(BattleMgr.Instance.BattleStack[lastSkillIndex].Damages[source] * 2, source, BattleMgr.Instance.BattleStack[lastSkillIndex].Source, template);
-                return true;
+                return input;
             }
 
 
             await BattleMgr.Instance.SetCommandText("But failed to counter back!");
-            return false;
+            return null;
         };
 
-        public static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<bool>> TryDestinyBond = async (source, target, template) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> TryDestinyBond = async (input, source, target, template) =>
         {
             if (source.GetHp() > target.GetHp())
             {
@@ -756,7 +728,7 @@ namespace Managers.BattleMgrComponents
             recorder.EffectLastRound = 2;
             recorder.ForbiddenCommonSkill = template;
             await TrySetHp(hpDiff, source, target, template);
-            return true;
+            return input;
         };
 
         //Buffs Callback
@@ -906,16 +878,8 @@ namespace Managers.BattleMgrComponents
         // target is ditto
         public static readonly Func<CommonResult, Pokemon, Pokemon, BuffRecorder, UniTask<CommonResult>> CancelTransform = async (input, buffSource, buffTarget, recorder) =>
         {
-            if (buffTarget.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
-            {
-                _ = BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetPokemonImg(buffTarget.ImageKey);
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.selfPokemonInfo.SetAttributeText(BattleMgr.Instance.PlayerLogGet<AttributesTemplate>(buffTarget.RuntimeID + "_ATTRIBUTE").Name);
-            }
-            else
-            {
-                _ = BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetPokemonImg(buffTarget.ImageKey);
-                BattleMgr.Instance.BattleScenePanelTwoPlayerUI.opPokemonInfo.SetAttributeText(BattleMgr.Instance.PlayerLogGet<AttributesTemplate>(buffTarget.RuntimeID + "_ATTRIBUTE").Name);
-            }
+            _ = BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(buffTarget)).SetPokemonImg(buffTarget.ImageKey);
+            BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(buffTarget)).SetAttributeText(BattleMgr.Instance.PlayerLogGet<AttributesTemplate>(buffTarget.RuntimeID + "_ATTRIBUTE").Name);
 
             PokemonBasicInfo info = PokemonMgr.Instance.GetPokemonByID(132);
 
@@ -953,7 +917,15 @@ namespace Managers.BattleMgrComponents
         
         public static readonly Func<CommonResult, Pokemon, Pokemon, BuffRecorder, UniTask<CommonResult>> AutoAddSkillPlayable = async (input, _, buffTarget, recorder) =>
         {
-            BattleMgr.Instance.LoadPokemonSkillDirectly(buffTarget, recorder.Template.TargetSkillID);
+            if (recorder.SkillTargets != null)
+            {
+                BattleMgr.Instance.LoadPokemonSkillDirectly(buffTarget, recorder.Template.TargetSkillID, recorder.SkillTargets);
+            }
+            else
+            {
+                BattleMgr.Instance.LoadPokemonSkillDirectly(buffTarget, recorder.Template.TargetSkillID);
+            }
+            
             input.NeedCommandFromPokemon = false;
             await UniTask.Yield();
             return input;
@@ -983,7 +955,7 @@ namespace Managers.BattleMgrComponents
             return input;
         };
 
-        public static readonly Func<CommonResult, Pokemon, Pokemon, BuffRecorder, UniTask<CommonResult>> DamageUpWhenHpDown = async (input, _, buffTarget, recorder) =>
+        public static readonly Func<CommonResult, Pokemon, Pokemon, BuffRecorder, UniTask<CommonResult>> IncreaseDamageWhenLowHp = async (input, _, buffTarget, recorder) =>
         {
             if (input.STemplate.Type != recorder.Template.Type)
             {
@@ -1083,7 +1055,7 @@ namespace Managers.BattleMgrComponents
                 {
                     SpecialEffectProb = 0.3f
                 };
-                await TryAddParalysis(buffTarget, input.SkillSource, temp);
+                await TryAddParalysis(input, buffTarget, input.SkillSource, temp);
             }
 
             return input;
@@ -1131,7 +1103,7 @@ namespace Managers.BattleMgrComponents
 
         public static readonly Func<CommonResult, Pokemon, Pokemon, BuffRecorder, UniTask<CommonResult>> ImposterDebut = async (input, _, buffTarget, _) =>
         {
-            BattleMgr.Instance.LoadPokemonSkillDirectlyImm(buffTarget, 144);
+            BattleMgr.Instance.LoadPokemonSkillDirectly(buffTarget, 144, null, SkillTargetType.FirstEnemy, PlayablePriority.Immediately);
             await UniTask.Yield();
             return input;
         };
@@ -1163,6 +1135,8 @@ namespace Managers.BattleMgrComponents
             {
                 foreach (var func in input.STemplate.ProcedureFunctions)
                 {
+                    if (input == null)
+                        return null;
                     if (func == TryApplyDamage)
                     {
                         var template = CommonSkillTemplate.CopySkill(input.STemplate);
@@ -1194,7 +1168,7 @@ namespace Managers.BattleMgrComponents
                     }
                     else
                     {
-                        await func(buffTarget, target, input.STemplate);
+                        input = await func(input, buffTarget, target, input.STemplate);
                     }
                 }
             }

@@ -15,18 +15,21 @@ public class HpColor : MonoBehaviour
     private RectTransform _transform;
 
     private Image _image;
+
+    private float _maxLength;
     // Start is called before the first frame update
     void Start()
     {
         _def = _max - _min;
         _transform = this.GetComponent<RectTransform>();
         _image = GetComponent<Image>();
+        _maxLength = transform.parent.GetComponent<RectTransform>().rect.width;
     }
 
     // Update is called once per frame
     void Update()
     {
-        _percentage = (400 - _transform.rect.width) / 400;
+        _percentage = (_maxLength - _transform.rect.width) / _maxLength;
         _image.color = _min + _percentage * _def;
     }
 }
