@@ -3,6 +3,8 @@ using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages

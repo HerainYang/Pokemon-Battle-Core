@@ -1,6 +1,7 @@
 using System;
 using Enum;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic.PokemonData;
 
 namespace Managers.BattleMgrComponents
 {

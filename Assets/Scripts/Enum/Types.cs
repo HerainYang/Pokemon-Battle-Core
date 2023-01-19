@@ -114,9 +114,11 @@ namespace Enum
         EndOfRound,
         WeatherDiscard,
         Skill,
-        SkillImm = 9999,
+        SkillImm = 5000,
+        Item = 5001,
         CommandStage = 10000,
         Debut,
+        WithDrawPokemon,
         Immediately,
     }
 
@@ -147,5 +149,13 @@ namespace Enum
     {
         PokemonBattlePanel,
         PokemonMgr
+    }
+
+    public enum ItemTarget
+    {
+        Hp,
+        OnePp,
+        AllPp,
+        Buff,
     }
 }

@@ -2,6 +2,9 @@ using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages

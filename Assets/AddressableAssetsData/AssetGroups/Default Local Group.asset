@@ -57,6 +57,10 @@ MonoBehaviour:
     m_Address: PokemonBattleInfo
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 1fd99805f2885d27599e1336b879ae6f
+    m_Address: ItemSelectPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 1343e0f9abb29d9a2b43f16f72c34fcd, type: 2}
   m_SchemaSet:

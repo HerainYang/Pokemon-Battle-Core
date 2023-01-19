@@ -5,6 +5,8 @@ using Managers.BattleMgrComponents.BattlePlayables;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayables.Stages;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEditor;
 using UnityEngine;
 
@@ -132,54 +134,82 @@ namespace Editor
         private void RenderSinglePlayable(ABattlePlayable playable)
         {
             EditorGUILayout.BeginHorizontal();
-            if (playable is RunTimeSkillBase)
+            switch (playable)
             {
-                RunTimeSkillBase skillBase = (RunTimeSkillBase)playable;
-                EditorGUILayout.LabelField("Skill: ", GUILayout.MinWidth(_itemMinWidth - 50), GUILayout.Height(_itemHeight));
-                if (GUILayout.Button(skillBase.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                case RunTimeSkillBase runTimeSkillBase:
                 {
-                    DisplaySkillInfo(skillBase.Template);
-                }
+                    RunTimeSkillBase skillBase = runTimeSkillBase;
+                    EditorGUILayout.LabelField(skillBase.RuntimeParam.RunTimeSkillBaseIsItem ? "Item: " : "Skill: ", GUILayout.MinWidth(_itemMinWidth - 50), GUILayout.Height(_itemHeight));
 
-                if (skillBase.Source != null)
-                {
-                    if (GUILayout.Button("Source: " + skillBase.Source.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                    if (GUILayout.Button(skillBase.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
                     {
-                        DisplayPokemonInfo(skillBase.Source);
+                        DisplaySkillInfo(skillBase.Template);
                     }
-                }
-                else
-                {
-                    GUILayout.Button("No Source", GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight));
-                }
 
-                foreach (var index in skillBase.TargetIndices)
-                {
-                    if (BattleMgr.Instance.OnStagePokemon[index] != null)
+                    if (skillBase.Source != null)
                     {
-                        if (GUILayout.Button("Target: " + BattleMgr.Instance.OnStagePokemon[index].Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                        if (GUILayout.Button("Source: " + skillBase.Source.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
                         {
-                            DisplayPokemonInfo(BattleMgr.Instance.OnStagePokemon[index]);
+                            DisplayPokemonInfo(skillBase.Source);
                         }
                     }
                     else
                     {
-                        GUILayout.Button("Invalid Target", GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight));
+                        GUILayout.Button("No Source", GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight));
                     }
+
+                    if (skillBase.RuntimeParam.TargetsByIndices != null)
+                    {
+                        foreach (var index in skillBase.RuntimeParam.TargetsByIndices)
+                        {
+                            if (BattleMgr.Instance.OnStagePokemon[index] != null)
+                            {
+                                if (GUILayout.Button("Target: " + BattleMgr.Instance.OnStagePokemon[index].Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                                {
+                                    DisplayPokemonInfo(BattleMgr.Instance.OnStagePokemon[index]);
+                                }
+                            }
+                            else
+                            {
+                                GUILayout.Button("Invalid Target", GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight));
+                            }
+                        }
+                    }
+
+                    if (skillBase.GetRunTimeTarget() != null)
+                    {
+                        foreach (var pokemon in skillBase.GetRunTimeTarget())
+                        {
+                            if (pokemon != null)
+                            {
+                                if (GUILayout.Button("Target: " + pokemon.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                                {
+                                    DisplayPokemonInfo(pokemon);
+                                }
+                            }
+                            else
+                            {
+                                GUILayout.Button("Invalid Target", GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight));
+                            }
+                        }
+                    }
+
+
+                    break;
                 }
-            }
-            else if (playable is BpDebut)
-            {
-                BpDebut skillBase = (BpDebut)playable;
-                EditorGUILayout.LabelField("Debut: ", GUILayout.MinWidth(_itemMinWidth - 50), GUILayout.Height(_itemHeight));
-                if (GUILayout.Button(skillBase.GetPokemonInstance().Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                case BpDebut debut:
                 {
-                    DisplayPokemonInfo(skillBase.GetPokemonInstance());
+                    EditorGUILayout.LabelField("Debut: ", GUILayout.MinWidth(_itemMinWidth - 50), GUILayout.Height(_itemHeight));
+                    if (GUILayout.Button(debut.GetPokemonInstance().Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                    {
+                        DisplayPokemonInfo(debut.GetPokemonInstance());
+                    }
+
+                    break;
                 }
-            }
-            else
-            {
-                EditorGUILayout.LabelField(playable.ToString());
+                default:
+                    EditorGUILayout.LabelField(playable.ToString());
+                    break;
             }
 
             EditorGUILayout.EndHorizontal();

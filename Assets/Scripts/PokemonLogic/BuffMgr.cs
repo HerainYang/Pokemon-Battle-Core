@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
 using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.PokemonLogic
@@ -142,7 +144,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             _listeners.TryGetValue(buff.TriggerEvent, out var listener);
             if (listener == null)
                 return false;
-            return listener.Exists(r => r.Target.Equals(target) && r.Template.BuffID == buffKey);
+            return listener.Exists(r => r.Target.Equals(target) && r.Template.ID == buffKey);
         }
 
         public async UniTask Update()

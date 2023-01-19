@@ -1,6 +1,7 @@
 using Enum;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic.BuffResults;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {

@@ -1,6 +1,6 @@
 using Enum;
 
-namespace Managers.BattleMgrComponents.PokemonLogic
+namespace PokemonLogic.PokemonData
 {
     public class PokemonBasicInfo
     {
@@ -17,10 +17,10 @@ namespace Managers.BattleMgrComponents.PokemonLogic
 
         public PokemonType Type;
 
-        public int[] SkillList;
-        public int[] Abilities;
+        public readonly int[] SkillList;
+        protected readonly int[] Abilities;
 
-        public string ImageKey;
+        public readonly string ImageKey;
 
         public PokemonBasicInfo(int id, string name, int hpMax, int attack, int defence, int specialAttack, int specialDefence, int speed, PokemonType type, int[] skillList, int[] abilities, string imageKey)
         {
@@ -43,7 +43,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             ImageKey = imageKey;
         }
 
-        public PokemonBasicInfo(PokemonBasicInfo template) : this(template.PokemonID, template.Name, template.HpMax, template.Attack, template.Defence,
+        protected PokemonBasicInfo(PokemonBasicInfo template) : this(template.PokemonID, template.Name, template.HpMax, template.Attack, template.Defence,
         template.SpecialAttack, template.SpecialDefence, template.Speed, template.Type, (int[])template.SkillList.Clone(), (int[])template.Abilities.Clone(), template.ImageKey) { }
 
         public int GetHpMax()

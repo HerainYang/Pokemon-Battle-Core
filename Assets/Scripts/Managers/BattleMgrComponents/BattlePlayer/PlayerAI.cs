@@ -3,6 +3,8 @@ using Enum;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic;
 using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayer
@@ -10,23 +12,12 @@ namespace Managers.BattleMgrComponents.BattlePlayer
     public class PlayerAI : ABattlePlayer
     {
         private bool _turn = false;
-        protected override async void SendCommandRequest(Pokemon pokemon)
+        protected override void SendCommandRequest(Pokemon pokemon)
         {
             int skillID = !_turn ? 1 : 2;
-            CommonSkillTemplate skill = PokemonMgr.Instance.GetSkillTemplateByID(pokemon.GetSkills()[1]);
-            int[] targets;
-            if (skill.TargetType == SkillTargetType.OneEnemy)
-            {
-                targets = await BattleMgr.Instance.TryAutoGetTarget(pokemon, SkillTargetType.FirstAvailableEnemy);
-            } else if (skill.TargetType == SkillTargetType.OneTeammate)
-            {
-                targets = await BattleMgr.Instance.TryAutoGetTarget(pokemon, SkillTargetType.FirstAvailableTeammate);
-            }
-            else
-            {
-                targets = await BattleMgr.Instance.TryAutoGetTarget(pokemon, skill.TargetType);
-            }
-            EventMgr.Instance.Dispatch(Constant.EventKey.RequestLoadPokemonSkill, pokemon, !_turn ? 1 : 2, targets);
+            
+            _ = pokemon.RuntimeSkillList[skillID].SkillTemplate.SendLoadSkillRequest(pokemon);
+            // SelectOnePokemonToSend(BattleMgr.Instance.GetPokemonOnstagePosition(pokemon), true);
 
             _turn = !_turn;
         }
@@ -34,8 +25,7 @@ namespace Managers.BattleMgrComponents.BattlePlayer
         protected override void SendPokemonForceAddRequest(int onStagePosition)
         {
             //replace as first available
-            EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, GetFirstPokemonCanSent(), onStagePosition);
-            // EventMgr.Instance.Dispatch(Constant.EventKey.BattlePokemonForceChangeCommandSent, this);
+            SelectOnePokemonToSend(onStagePosition, true);
         }
 
         public override void TestHeartBeat()

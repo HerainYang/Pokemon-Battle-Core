@@ -62,10 +62,7 @@ namespace Managers
             }
             else
             {
-                await UniTask.WaitUntil(() =>
-                {
-                    return !_existWindowList.ContainsKey(windowID) || (_existWindowList[windowID] != null);
-                });
+                await UniTask.WaitUntil(() => !_existWindowList.ContainsKey(windowID) || (_existWindowList[windowID] != null));
                 uiWindow = _existWindowList[windowID];
             }
 

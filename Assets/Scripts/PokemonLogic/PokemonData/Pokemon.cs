@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Enum;
-using PokemonLogic;
+using Managers;
+using Managers.BattleMgrComponents;
+using Managers.BattleMgrComponents.PokemonLogic;
 using UnityEngine;
 using Random = System.Random;
 
-namespace Managers.BattleMgrComponents.PokemonLogic
+namespace PokemonLogic.PokemonData
 {
     public class Pokemon : PokemonBasicInfo
     {
@@ -19,8 +21,9 @@ namespace Managers.BattleMgrComponents.PokemonLogic
         public bool IsFaint;
         public bool OnStage;
 
-        public List<int> Pps;
         private int[] _pokemonStatsChange;
+
+        public List<PokemonRuntimeSkillData> RuntimeSkillList;
 
 
         public Pokemon(PokemonBasicInfo template, string trainerID) : base(template)
@@ -28,18 +31,22 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             TrainerID = trainerID;
             _hp = template.GetHpMax();
             RuntimeID = Guid.NewGuid();
-            Random r = new Random();
+            Random r = new Random(RuntimeID.GetHashCode());
             int index = r.Next(0, Abilities.Length);
             Attribute = PokemonMgr.Instance.GetAttributeByID(Abilities[index]);
             Level = 100;
             OnStage = false;
             IsFaint = false;
-            Pps = new List<int>();
+            RuntimeSkillList = new List<PokemonRuntimeSkillData>();
             _pokemonStatsChange = new int[8];
-            
+
             for (int i = 0; i < template.SkillList.Length; i++)
             {
-                Pps.Add(PokemonMgr.Instance.GetSkillTemplateByID(SkillList[i]).PowerPoint);
+                RuntimeSkillList.Add(new PokemonRuntimeSkillData()
+                {
+                    SkillTemplate = PokemonMgr.Instance.GetSkillTemplateByID(SkillList[i]),
+                    Pp = PokemonMgr.Instance.GetSkillTemplateByID(SkillList[i]).PowerPoint
+                });
             }
         }
 
@@ -71,45 +78,80 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             _pokemonStatsChange[(int)statType] += changeValue;
             if (statType == PokemonStat.CriticalHit)
             {
-                _pokemonStatsChange[(int)statType] = _pokemonStatsChange[(int)statType] > 3 ? 3 : (_pokemonStatsChange[(int)statType] < 0 ? 0 : _pokemonStatsChange[(int)statType]) ;
+                _pokemonStatsChange[(int)statType] = _pokemonStatsChange[(int)statType] > 3 ? 3 : (_pokemonStatsChange[(int)statType] < 0 ? 0 : _pokemonStatsChange[(int)statType]);
             }
             else
             {
-                _pokemonStatsChange[(int)statType] = _pokemonStatsChange[(int)statType] > 6 ?  6 : (_pokemonStatsChange[(int)statType] < -6 ? -6 : _pokemonStatsChange[(int)statType]);
+                _pokemonStatsChange[(int)statType] = _pokemonStatsChange[(int)statType] > 6 ? 6 : (_pokemonStatsChange[(int)statType] < -6 ? -6 : _pokemonStatsChange[(int)statType]);
             }
-        }
-
-        public int[] GetSkills()
-        {
-            return SkillList;
         }
 
         public bool CanUseSkillByIndex(int index)
         {
-            return Pps[index] != 0;
+            return RuntimeSkillList[index].Pp != 0;
         }
 
-        public void ConsumePpByIndex(int index)
+        public void ConsumePpBySkillID(int skillID)
         {
-            if(index == 10000)
+            int index = -1;
+            for (int i = 0; i < RuntimeSkillList.Count; i++)
+            {
+                if (RuntimeSkillList[i].SkillTemplate.ID == skillID)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index == -1)
                 return;
-            if (Pps[index] == 0)
+            
+            if (RuntimeSkillList[index].Pp == 0)
             {
                 Debug.LogError(index + " skills has no PP! It should not happen!");
             }
-            Pps[index] -= 1;
+
+            RuntimeSkillList[index].Pp -= 1;
         }
 
-        public async UniTask<bool> ChangeHp(int value)
+        public async UniTask<bool> SetPpByIndex(PokemonRuntimeSkillData skillData, int value)
         {
-            Debug.Log("[Pokemon] "+Name+ " Hp Change: damage " + value);
+            if (!RuntimeSkillList.Contains(skillData))
+            {
+                Debug.LogError("receive skill that doesn't be long to " + Name);
+            }
+
             int actualValue = value;
             if (IsFaint)
             {
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("But have no effect");
                 return false;
             }
-            
+
+            if (skillData.Pp + value <= 0)
+            {
+                actualValue = -skillData.Pp;
+            }
+
+            if (skillData.Pp + value >= skillData.SkillTemplate.PowerPoint)
+            {
+                actualValue = skillData.SkillTemplate.PowerPoint - skillData.Pp;
+            }
+
+            skillData.Pp += actualValue;
+            await BattleMgr.Instance.SetCommandText(Name + "'s " + skillData.SkillTemplate.Name + "'s PP change by " + actualValue);
+            return true;
+        }
+
+        public async UniTask<bool> ChangeHp(int value)
+        {
+            Debug.Log("[Pokemon] " + Name + " Hp Change: damage " + value);
+            int actualValue = value;
+            if (IsFaint)
+            {
+                await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("But have no effect");
+                return false;
+            }
+
             if (_hp + value <= 0)
             {
                 actualValue = -_hp;
@@ -122,6 +164,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic
             {
                 actualValue = HpMax - _hp;
             }
+
             _hp += actualValue;
             Debug.Log("[Pokemon] Hp Change: Hp remain " + _hp + ", change value: " + actualValue);
             EventMgr.Instance.Dispatch(Constant.EventKey.HpChange, _hp, this);

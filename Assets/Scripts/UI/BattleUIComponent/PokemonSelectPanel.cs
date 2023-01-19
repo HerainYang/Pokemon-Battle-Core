@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Enum;
 using Managers;
 using Managers.BattleMgrComponents;
@@ -7,7 +8,9 @@ using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace UI.BattleUIComponent
@@ -30,7 +33,6 @@ namespace UI.BattleUIComponent
         private List<Pokemon> _selectPokemon;
         private int _requireNumberOfPokemon = 1;
         private int _targetPosition;
-        private int _skillIndex;
 
         private void AddToSelectGroup(Pokemon pokemon)
         {
@@ -75,19 +77,23 @@ namespace UI.BattleUIComponent
 
         private void ConfirmBehavior()
         {
+            List<int> indices;
             switch (_commandRequestType)
             {
                 case CommandRequestType.Pokemons:
-                    EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, _selectPokemon[0], _targetPosition);
+                    // EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, _selectPokemon[0], _targetPosition);
+                    EventMgr.Instance.Dispatch(Constant.UIEventKey.ClosePokemonSelectWindow, new []{BattleMgr.Instance.PlayerInGame[_selectPokemon[0].TrainerID].Pokemons.IndexOf(_selectPokemon[0])});
                     BackBehavior();
                     break;
-                default:
-                    List<int> indices = new List<int>();
+                case CommandRequestType.Skills:
+                case CommandRequestType.Items:
+                    indices = new List<int>();
                     foreach (var pokemon in _selectPokemon)
                     {
                         indices.Add(BattleMgr.Instance.GetPokemonOnstagePosition(pokemon));
                     }
-                    EventMgr.Instance.Dispatch(Constant.EventKey.RequestLoadPokemonSkill, BattleMgr.Instance.OnStagePokemon[_targetPosition], _skillIndex, indices.ToArray());
+                    // EventMgr.Instance.Dispatch(Constant.EventKey.RequestLoadPokemonSkill, BattleMgr.Instance.OnStagePokemon[_targetPosition], _skillIndex, indices.ToArray());
+                    EventMgr.Instance.Dispatch(Constant.UIEventKey.ClosePokemonSelectWindow, indices.ToArray());
                     BackBehavior();
                     break;
             }
@@ -105,27 +111,43 @@ namespace UI.BattleUIComponent
                 Destroy(child.gameObject);
             }
             gameObject.SetActive(false);
+            EventMgr.Instance.Dispatch(Constant.UIEventKey.ClosePokemonSelectWindow, (int[]) null);
+            UIWindowsManager.Instance.HideUIWindow("PokemonSelectPanel");
         }
 
-        public void Init(int targetPosition, bool forceChange, CommandRequestType commandRequestType, List<Pokemon> pokemonOptionList, int skillIndex = 0)
+        public void Init(int targetPosition, bool forceChange, CommandRequestType commandRequestType, List<Pokemon> pokemonOptionList, CommonSkillTemplate template = null)
         {
             backBtn.gameObject.SetActive(!forceChange);
             _commandRequestType = commandRequestType;
             _targetPosition = targetPosition;
-            _skillIndex = skillIndex;
 
             switch (commandRequestType)
             {
-                case CommandRequestType.Pokemons:
+                case CommandRequestType.Items:
                 {
+                    // For simplification, only consider to own pokemon
                     layoutGroupL.GetComponent<Image>().color = transparentColor;
                     layoutGroupR.GetComponent<Image>().color = transparentColor;
-                    _requireNumberOfPokemon = 1;
                     for (int i = 0; i < pokemonOptionList.Count; i++)
                     {
                         var item = Instantiate(itemPrefab, i % 2 == 0 ? layoutGroupL : layoutGroupR).GetComponent<PokemonPanelInfoItem>();
                         item.Init(pokemonOptionList[i], targetPosition);
                         _ = UIHelper.SetImageSprite(pokemonOptionList[i].ImageKey, item.GetImg(), false);
+                        item.HotArea.onClick.AddListener(() => ItemOnClick(item));
+                    }
+
+                    break;
+                }
+                case CommandRequestType.Pokemons:
+                {
+                    layoutGroupL.GetComponent<Image>().color = transparentColor;
+                    layoutGroupR.GetComponent<Image>().color = transparentColor;
+                    for (int i = 0; i < pokemonOptionList.Count; i++)
+                    {
+                        var item = Instantiate(itemPrefab, i % 2 == 0 ? layoutGroupL : layoutGroupR).GetComponent<PokemonPanelInfoItem>();
+                        item.Init(pokemonOptionList[i], targetPosition);
+                        _ = UIHelper.SetImageSprite(pokemonOptionList[i].ImageKey, item.GetImg(), false);
+                        item.HotArea.interactable = (!pokemonOptionList[i].OnStage && !pokemonOptionList[i].IsFaint);
                         item.HotArea.onClick.AddListener(() => ItemOnClick(item));
                     }
 
@@ -137,12 +159,12 @@ namespace UI.BattleUIComponent
                     layoutGroupL.GetComponent<Image>().color = playerGroupColor;
                     layoutGroupR.GetComponent<Image>().color = enemyGroupColor;
                     var curPokemon = BattleMgr.Instance.OnStagePokemon[_targetPosition];
-                    CommonSkillTemplate template = PokemonMgr.Instance.GetSkillTemplateByID(curPokemon.GetSkills()[skillIndex]);
                     for (int i = 0; i < pokemonOptionList.Count; i++)
                     {
                         var item = Instantiate(itemPrefab, pokemonOptionList[i].TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID ? layoutGroupL : layoutGroupR).GetComponent<PokemonPanelInfoItem>();
                         item.Init(pokemonOptionList[i], targetPosition);
                         _ = UIHelper.SetImageSprite(pokemonOptionList[i].ImageKey, item.GetImg(), false);
+                        Assert.IsNotNull(template);
                         if (template.TargetType == SkillTargetType.OneEnemy && pokemonOptionList[i].TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
                         {
                             item.HotArea.interactable = false;

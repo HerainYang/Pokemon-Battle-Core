@@ -9,6 +9,8 @@ using Managers.BattleMgrComponents.BattlePlayables;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayables.Stages;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents
@@ -61,7 +63,7 @@ namespace Managers.BattleMgrComponents
 
         public int CancelSkillByPSourcePokemonAndSkillId(Pokemon pokemon, int skillId)
         {
-            int i = _remainingPlayables.RemoveAll(playable => playable is RunTimeSkillBase && ((RunTimeSkillBase)playable).Template.SkillID == skillId && Equals(((RunTimeSkillBase)playable).Source, pokemon));
+            int i = _remainingPlayables.RemoveAll(playable => playable is RunTimeSkillBase && ((RunTimeSkillBase)playable).Template.ID == skillId && Equals(((RunTimeSkillBase)playable).Source, pokemon));
             Debug.Log(GetProcessChart());
             return i;
         }
@@ -103,6 +105,11 @@ namespace Managers.BattleMgrComponents
             Debug.Log(GetProcessChart());
 
             _battlePlayables.Last().Execute();
+        }
+
+        public ABattlePlayable GetCurrentPlayable()
+        {
+            return _battlePlayables.Last();
         }
         
         

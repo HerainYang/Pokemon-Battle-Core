@@ -3,6 +3,8 @@ using Cysharp.Threading.Tasks;
 using Managers;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -92,7 +94,8 @@ namespace UI.BattleUIComponent
         {
             // float targetLength = ((float)(hpTo) / target.GetHpMax()) * 400;
             // hp.sizeDelta = new Vector2(targetLength, hp.rect.height);
-            if (_curPokemon != null && target.RuntimeID != _curPokemon.RuntimeID)
+
+            if (_curPokemon == null || target.RuntimeID != _curPokemon.RuntimeID)
             {
                 return;
             }

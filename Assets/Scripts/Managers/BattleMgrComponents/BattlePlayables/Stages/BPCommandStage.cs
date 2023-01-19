@@ -7,6 +7,9 @@ using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
@@ -31,15 +34,13 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
                     continue;
                 }
 
-                var result = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeRequirePokemonCommand, new CommonResult(), pokemon);
-                if (!result.NeedCommandFromPokemon)
-                {
-                    continue;
-                }
+                
                 ABattlePlayer player = BattleMgr.Instance.PlayerInGame[pokemon.TrainerID];
                 player.AddCommandForPokemon(pokemon);
                 _commandWaitList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             }
+            
+            await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeRequirePokemonCommand, new CommonResult());
 
             foreach (var player in BattleMgr.Instance.PlayerInGame)
             {
@@ -50,8 +51,10 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         private void ReceiveCommand(ABattlePlayer player, Pokemon pokemon)
         {
             // _commandWaitList.Remove(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
-            _receiveList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
+            bool success = _receiveList.Add(new Tuple<ABattlePlayer, Guid>(player, pokemon.RuntimeID));
             Debug.Log("[BPCommandStage] Receive Command From " + player.PlayerInfo.name + " of pokemon " + pokemon.RuntimeID + ", remains " + (_commandWaitList.Count - _receiveList.Count) + " to wait!");
+            if(!success)
+                return;
             if (_commandWaitList.Count == _receiveList.Count)
             {
                 OnDestroy();

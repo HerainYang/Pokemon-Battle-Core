@@ -14,6 +14,6 @@ public class BattleInitializer : MonoBehaviour
     private void Start()
     {
         _ = UIWindowsManager.Instance.ShowUIWindowAsync("BattleStartPanel");
-        BattleMgr.Instance.InitData(playerInfos, 3);
+        BattleMgr.Instance.InitData(playerInfos, 2);
     }
 }

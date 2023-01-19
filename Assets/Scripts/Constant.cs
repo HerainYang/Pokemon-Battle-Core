@@ -2,54 +2,57 @@ public static class Constant
 {
     public struct EventKey
     {
-        public static readonly string HpChange = "HP_CHANGE";
-        public static readonly string CommandStageStart = "COMMAND_STAGE_START";
-        public static readonly string RequestLoadPokemonSkill = "REQUEST_LOAD_POKEMON_SKILL";
-        public static readonly string CommandStageEnd = "COMMAND_STAGE_END";
-        public static readonly string BattleCommandSent = "BATTLE_COMMAND_SENT";
-        public static readonly string PokemonFaint = "POKEMON_FAINT";
-        public static readonly string BattlePokemonForceChangeCommandSent = "BATTLE_POKEMON_FORCE_CHANGE_COMMAND_SENT";
-        public static readonly string HeartBeatSent = "HEARTBEAT_SENT";
-        public static readonly string RequestSentPokemonOnStage = "REQUEST_SENT_POKEMON_ON_STAGE";
+        public const string HpChange = "HP_CHANGE";
+        public const string CommandStageStart = "COMMAND_STAGE_START";
+        public const string RequestLoadPokemonSkill = "REQUEST_LOAD_POKEMON_SKILL";
+        public const string CommandStageEnd = "COMMAND_STAGE_END";
+        public const string BattleCommandSent = "BATTLE_COMMAND_SENT";
+        public const string PokemonFaint = "POKEMON_FAINT";
+        public const string BattlePokemonForceChangeCommandSent = "BATTLE_POKEMON_FORCE_CHANGE_COMMAND_SENT";
+        public const string HeartBeatSent = "HEARTBEAT_SENT";
+        public const string RequestSentPokemonOnStage = "REQUEST_SENT_POKEMON_ON_STAGE";
+        // public const string RequestUseItemOnPokemon = "REQUEST_USE_ITEM_ON_POKEMON";
+    }
+    
+    public struct UIEventKey
+    {
+        public const string ClosePokemonSelectWindow = "CLOSE_POKEMON_SELECT_WINDOW";
+        public const string CloseSkillSelectWindow = "CLOSE_SKILL_SELECT_WINDOW";
     }
     
     public struct BuffExecutionTimeKey
     {
-        public static readonly string BeforeMove = "BEFORE_MOVE";
-        public static readonly string BeforeApplyDamage = "BEFORE_APPLY_DAMAGE";
-        public static readonly string BeforeTakingDamage = "BEFORE_TAKING_DAMAGE";
-        public static readonly string StartOfRound = "START_OF_ROUND";
-        public static readonly string EndOfRound = "END_OF_ROUND";
-        public static readonly string GettingSkillAccuracy = "GETTING_SKILL_ACCURACY";
-        public static readonly string CalculatingHit = "CALCULATING_HIT";
-        public static readonly string CalculatingCriticalDamage = "CALCULATING_CRITICAL_DAMAGE";
-        public static readonly string CalculatingSkillPower = "CALCULATING_SKILL_POWER";
-        public static readonly string CalculatingFinalDamage = "CALCULATING_FINAL_DAMAGE";
-        public static readonly string AfterTakingDamage = "AFTER_TAKING_DAMAGE";
-        public static readonly string AfterHealDone = "AFTER_HEAL_DONE";
-        public static readonly string AfterDebut = "AFTER_DEBUT";
-        public static readonly string BeforeAddBuff = "BEFORE_ADD_BUFF";
-        public static readonly string OnAddBuff = "ON_ADD_BUFF";
-        public static readonly string BeforeWithdraw = "BEFORE_WITHDRAW";
-        public static readonly string WhenGettingTarget = "WHEN_GETTING_TARGET";
-        public static readonly string BeforeRequirePokemonCommand = "BEFORE_REQUIRE_POKEMON_COMMAND";
-        public static readonly string BeforeLoadPokemonSkill = "BEFORE_LOAD_POKEMON_SKILL";
-        
-
-        public static readonly string GettingSpecialAttack = "GETTING_SPECIAL_ATTACK";
-
-        public static readonly string OnWeatherChange = "ON_WEATHER_CHANGE";
-
-        public static readonly string None = "NONE";
+        public const string BeforeMove = "BEFORE_MOVE";
+        public const string BeforeApplyDamage = "BEFORE_APPLY_DAMAGE";
+        public const string BeforeTakingDamage = "BEFORE_TAKING_DAMAGE";
+        public const string StartOfRound = "START_OF_ROUND";
+        public const string EndOfRound = "END_OF_ROUND";
+        public const string GettingSkillAccuracy = "GETTING_SKILL_ACCURACY";
+        public const string CalculatingHit = "CALCULATING_HIT";
+        public const string CalculatingCriticalDamage = "CALCULATING_CRITICAL_DAMAGE";
+        public const string CalculatingSkillPower = "CALCULATING_SKILL_POWER";
+        public const string CalculatingFinalDamage = "CALCULATING_FINAL_DAMAGE";
+        public const string AfterTakingDamage = "AFTER_TAKING_DAMAGE";
+        public const string AfterHealDone = "AFTER_HEAL_DONE";
+        public const string AfterDebut = "AFTER_DEBUT";
+        public const string BeforeAddBuff = "BEFORE_ADD_BUFF";
+        public const string OnAddBuff = "ON_ADD_BUFF";
+        public const string BeforeWithdraw = "BEFORE_WITHDRAW";
+        public const string WhenGettingTarget = "WHEN_GETTING_TARGET";
+        public const string BeforeRequirePokemonCommand = "BEFORE_REQUIRE_POKEMON_COMMAND";
+        public const string BeforeLoadPokemonSkill = "BEFORE_LOAD_POKEMON_SKILL";
+        public const string GettingSpecialAttack = "GETTING_SPECIAL_ATTACK";
+        public const string OnWeatherChange = "ON_WEATHER_CHANGE";
+        public const string None = "NONE";
     }
     
     public struct PlayerInfo
     {
-        public static readonly string LocalPlayerID = "p1";
+        public const string LocalPlayerID = "p1";
     }
     
     public struct GameConfig
     {
-        public static readonly float CriticalDamageIncrease = 2.25f;
+        public const float CriticalDamageIncrease = 2.25f;
     }
 }

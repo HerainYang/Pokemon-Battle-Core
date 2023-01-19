@@ -2,23 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Enum;
+using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
+using UI.BattleUIComponent;
 using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayer
 {
     public abstract class ABattlePlayer
     {
-        protected List<Pokemon> CommandRequests;
-        protected List<int> ForceChangePokemonRequest;
-        public BasicPlayerInfo PlayerInfo;
-        public List<Pokemon> Pokemons;
+        private readonly List<Pokemon> _commandRequests;
+        private readonly List<int> _forceChangePokemonRequest;
+        public readonly BasicPlayerInfo PlayerInfo;
+        public readonly List<Pokemon> Pokemons;
+        public Dictionary<Item, int> Items;
 
         public ABattlePlayer(BasicPlayerInfo info)
         {
-            CommandRequests = new List<Pokemon>();
-            ForceChangePokemonRequest = new List<int>();
+            _commandRequests = new List<Pokemon>();
+            _forceChangePokemonRequest = new List<int>();
             Pokemons = new List<Pokemon>();
+            Items = new Dictionary<Item, int>();
             PlayerInfo = info;
         }
 
@@ -28,36 +36,42 @@ namespace Managers.BattleMgrComponents.BattlePlayer
 
         public void ExecuteCommandStage()
         {
-            if (CommandRequests.Count == 0)
+            
+            if (_commandRequests.Count == 0)
             {
                 return;
             }
             
-            Pokemon pokemon = CommandRequests.First();
-            CommandRequests.RemoveAt(0);
+            Pokemon pokemon = _commandRequests.First();
+            _commandRequests.RemoveAt(0);
             SendCommandRequest(pokemon);
+        }
+
+        public void RemovePokemonFromRequestList(Pokemon pokemon)
+        {
+            _commandRequests.Remove(pokemon);
         }
 
         public void ExecuteAddPokemonStage()
         {
-            if (ForceChangePokemonRequest.Count == 0)
+            if (_forceChangePokemonRequest.Count == 0)
             {
                 return;
             }
 
-            int onStagePosition = ForceChangePokemonRequest.First();
-            ForceChangePokemonRequest.RemoveAt(0);
+            int onStagePosition = _forceChangePokemonRequest.First();
+            _forceChangePokemonRequest.RemoveAt(0);
             SendPokemonForceAddRequest(onStagePosition);
         }
 
         public void AddCommandForPokemon(Pokemon pokemon)
         {
-            CommandRequests.Add(pokemon);
+            _commandRequests.Add(pokemon);
         }
 
         public void AddPosition2ForceChangeList(int position)
         {
-            ForceChangePokemonRequest.Add(position);
+            _forceChangePokemonRequest.Add(position);
         }
 
         public bool AllPokemonFaint()
@@ -98,6 +112,59 @@ namespace Managers.BattleMgrComponents.BattlePlayer
             }
             
             return null;
+        }
+
+        public void UserItem(int itemID)
+        {
+            var listOfItem = new List<Item>(Items.Keys);
+            foreach (var item in listOfItem.Where(item => item.ID == itemID))
+            {
+                if (Items[item] <= 0)
+                {
+                    throw new Exception("It should be impossible for item count to be less or equal to 0");
+                }
+
+                Items[item]--;
+                return;
+            }
+            throw new Exception("It should be impossible to call this function while user does not have this item");
+        }
+
+        public virtual void SelectOnePokemonToSend(int onStagePosition, bool forceChange)
+        {
+            EventMgr.Instance.Dispatch(Constant.EventKey.RequestSentPokemonOnStage, GetFirstPokemonCanSent(), onStagePosition);
+        }
+
+        public virtual async UniTask<int[]> SelectIndicesTarget(CommonSkillTemplate template, Pokemon curPokemon)
+        {
+            int[] targets = null;
+            switch (template.TargetType)
+            {
+                case SkillTargetType.OneEnemy:
+                    targets = BattleMgr.Instance.TryAutoGetTarget(curPokemon, SkillTargetType.FirstAvailableEnemy);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            await UniTask.Yield();
+
+            return targets;
+        }
+        
+        public virtual async UniTask<List<PokemonRuntimeSkillData>> SelectSkillFromTarget(int skillInNeed, Pokemon curPokemon)
+        {
+            List<PokemonRuntimeSkillData> resultList = new List<PokemonRuntimeSkillData>();
+            for (int i = 0; i < skillInNeed; i++)
+            {
+                if(i >= curPokemon.RuntimeSkillList.Count)
+                    break;
+                resultList.Add(curPokemon.RuntimeSkillList[i]);
+            }
+
+            await UniTask.Yield();
+
+            return resultList;
         }
     }
 }

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
+using PokemonLogic.PokemonData;
 
-namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
+namespace PokemonLogic.BuffResults
 {
     public class CommonResult
     {
@@ -30,11 +31,15 @@ namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
         public string Message;
 
         public bool CanBeTargeted = true;
-        public bool NeedCommandFromPokemon = true;
-
-        public int LoadSkill;
-        public bool CanLoadSkill = true;
         
+        public bool CanLoadSkill = true;
+        public int SkillID;
+        public int[] TargetsByIndices;
+
+        public bool RunTimeSkillBaseIsItem = false;
+
+        public Dictionary<Pokemon, List<PokemonRuntimeSkillData>> PokemonSkillsDic;
+
         public int[] PokemonStat = new int[6];
 
         public Weather TargetWeather;
@@ -42,7 +47,7 @@ namespace Managers.BattleMgrComponents.PokemonLogic.BuffResults
         public int BuffKey;
         public bool CanAddBuff = true;
 
-        public List<Pokemon> TargetsList;
+        public List<Pokemon> TargetsByPokemons;
 
         public bool ShouldContinueSkill = true;
     }

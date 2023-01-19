@@ -6,6 +6,8 @@ using Managers;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +16,7 @@ using UnityEngine.UI;
 public class PokemonPanelInfoItem : MonoBehaviour
 {
     public Pokemon ThisPokemon;
+    private int _targetPosition;
 
     [SerializeField] private Color valid;
     [SerializeField] private Color faint;
@@ -44,6 +47,7 @@ public class PokemonPanelInfoItem : MonoBehaviour
     public void Init(Pokemon thisPokemon, int targetPosition)
     {
         ThisPokemon = thisPokemon;
+        _targetPosition = targetPosition;
         SetColor(false);
         float percentage = ((float)ThisPokemon.GetHp() / ThisPokemon.HpMax);
         hpRemain.sizeDelta = new Vector2(percentage * 250, hpRemain.sizeDelta.y);
@@ -58,7 +62,7 @@ public class PokemonPanelInfoItem : MonoBehaviour
             return;
         }
         bg.color = ThisPokemon.IsFaint ? faint : valid;
-        if (ThisPokemon.OnStage && !ThisPokemon.IsFaint && ThisPokemon.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID)
+        if (ThisPokemon.OnStage && !ThisPokemon.IsFaint && ThisPokemon.TrainerID == BattleMgr.Instance.LocalPlayer.PlayerInfo.playerID && BattleMgr.Instance.OnStagePokemon[_targetPosition] != null && ThisPokemon.Equals(BattleMgr.Instance.OnStagePokemon[_targetPosition]))
         {
             bg.color = _current;
         }

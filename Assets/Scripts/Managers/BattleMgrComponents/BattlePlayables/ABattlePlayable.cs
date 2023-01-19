@@ -1,5 +1,6 @@
 
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
+using Managers.BattleMgrComponents.BattlePlayer;
 
 namespace Managers.BattleMgrComponents.BattlePlayables
 {
@@ -11,7 +12,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables
         public abstract void Execute();
         protected abstract void OnDestroy();
 
-        public ABattlePlayable(int priority)
+        protected ABattlePlayable(int priority)
         {
             Priority = priority;
             Available = true;

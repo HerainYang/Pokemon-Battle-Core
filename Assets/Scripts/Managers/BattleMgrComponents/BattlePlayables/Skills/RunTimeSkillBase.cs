@@ -5,6 +5,9 @@ using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonLogic;
+using PokemonLogic.BuffResults;
+using PokemonLogic.PokemonData;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -12,18 +15,27 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 {
     public class RunTimeSkillBase : ABattlePlayable
     {
-        public Pokemon Source;
-        public int[] TargetIndices;
-        public CommonSkillTemplate Template;
-        public List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>> Procedure;
+        public readonly Pokemon Source;
+        public readonly CommonSkillTemplate Template;
+        private readonly List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>> _procedure;
 
-        public RunTimeSkillBase(CommonSkillTemplate template, Pokemon source, int[] targetIndices) : base(BattleLogic.GetPokemonSpeed(source))
+        public CommonResult RuntimeParam;
+
+        // two kinds of skill, target on pokemon, target on position, most of skills target on position, items target on pokemon
+        public RunTimeSkillBase(CommonSkillTemplate template, Pokemon source, CommonResult preLoadResult, int priority = (int)PlayablePriority.None) : base(priority == (int)PlayablePriority.None ? BattleLogic.GetPokemonSpeed(source) : priority)
         {
-            Procedure = new List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>>();
+            _procedure = new List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>>();
             Template = template;
             Source = source;
-            TargetIndices = targetIndices;
+            RuntimeParam = preLoadResult;
         }
+
+#if UNITY_EDITOR
+        public List<Pokemon> GetRunTimeTarget()
+        {
+            return RuntimeParam.TargetsByPokemons;
+        }
+#endif
 
         public override async void Execute()
         {
@@ -31,9 +43,12 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
             item.Source = Source;
             item.Template = Template;
             BattleMgr.Instance.BattleStack.Add(item);
-            
-            if(Source.OnStage && !Source.IsFaint) 
+
+            if (RuntimeParam.RunTimeSkillBaseIsItem) 
+                await BattleMgr.Instance.SetCommandText(BattleMgr.Instance.PlayerInGame[Source.TrainerID].PlayerInfo.name + " use " + Template.Name);
+            else if (Source.OnStage && !Source.IsFaint) 
                 await BattleMgr.Instance.SetCommandText(BattleMgr.Instance.PlayerInGame[Source.TrainerID].PlayerInfo.name + " asks " + Source.GetName() + " to use " + Template.Name);
+            
             if (Available == false)
             {
                 if (Source.OnStage && !Source.IsFaint)
@@ -47,7 +62,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
                 return;
             foreach (var func in Template.ProcedureFunctions)
             {
-                Procedure.Add(func);
+                _procedure.Add(func);
             }
             await ExecuteList();
             
@@ -61,37 +76,43 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 
         private async UniTask ExecuteList()
         {
-            List<Pokemon> targets = await BattleLogic.FindTarget(TargetIndices);
-            CommonResult result = new CommonResult();
-            result.CanMove = true;
-            result.Priority = (int)MovePriority.Normal;
-            result.STemplate = Template;
-            result.TargetsList = targets;
-            result = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeMove, result, Source);
-            
-            if (!result.CanMove)
+            if (RuntimeParam.TargetsByPokemons == null)
             {
-                if (result.Message != null)
-                {
-                    await BattleMgr.Instance.SetCommandText(result.Message);
-                }
-                return;
+                RuntimeParam.TargetsByPokemons = await BattleLogic.FindTarget(RuntimeParam.TargetsByIndices, Source);
             }
-            if (targets == null || targets.Count == 0)
+            
+            if (!RuntimeParam.RunTimeSkillBaseIsItem)
+            {
+                RuntimeParam.CanMove = true;
+                RuntimeParam.Priority = (int)MovePriority.Normal;
+                RuntimeParam.STemplate = Template;
+                RuntimeParam = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeMove, RuntimeParam, Source);
+            
+                if (!RuntimeParam.CanMove)
+                {
+                    if (RuntimeParam.Message != null)
+                    {
+                        await BattleMgr.Instance.SetCommandText(RuntimeParam.Message);
+                    }
+                    return;
+                }
+            }
+            
+
+            if (RuntimeParam.TargetsByPokemons == null || RuntimeParam.TargetsByPokemons.Count == 0)
             {
                 await BattleMgr.Instance.SetCommandText("But there is no target!");
                 return;
             }
 
-            BattleMgr.Instance.BattleStack[BattleMgr.Instance.BattleStack.Count - 1].Targets = targets;
+            BattleMgr.Instance.BattleStack[^1].Targets = RuntimeParam.TargetsByPokemons;
 
-            foreach (var target in targets)
+            foreach (var target in RuntimeParam.TargetsByPokemons)
             {
-                CommonResult funcResult = new CommonResult();
-                for (int i = 0; i < Procedure.Count; i++)
+                for (int i = 0; i < _procedure.Count; i++)
                 {
-                    funcResult = await Procedure[i](funcResult, Source, target, Template);
-                    if (funcResult == null)
+                    RuntimeParam = await _procedure[i](RuntimeParam, Source, target, Template);
+                    if (RuntimeParam == null)
                     {
                         break;
                     }

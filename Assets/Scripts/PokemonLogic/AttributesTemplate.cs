@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
+using PokemonLogic;
+using PokemonLogic.PokemonData;
 
 namespace Managers.BattleMgrComponents.PokemonLogic
 {
