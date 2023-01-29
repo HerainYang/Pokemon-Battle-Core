@@ -7,6 +7,7 @@ using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonDemo;
 using PokemonLogic;
 using PokemonLogic.PokemonData;
 using UnityEngine;

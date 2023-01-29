@@ -4,6 +4,7 @@ using Enum;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonDemo;
 using PokemonLogic.PokemonData;
 
 namespace PokemonLogic

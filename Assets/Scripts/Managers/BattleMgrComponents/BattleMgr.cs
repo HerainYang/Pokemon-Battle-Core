@@ -12,6 +12,7 @@ using Managers.BattleMgrComponents.BattlePlayables.Stages;
 using Managers.BattleMgrComponents.BattlePlayer;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
+using PokemonDemo;
 using PokemonLogic;
 using PokemonLogic.BuffResults;
 using PokemonLogic.PokemonData;

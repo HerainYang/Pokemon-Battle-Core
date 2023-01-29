@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Managers;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonDemo;
 using PokemonLogic;
 using PokemonLogic.PokemonData;
 using UnityEngine;

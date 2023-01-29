@@ -5,6 +5,7 @@ using Enum;
 using Managers;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayer;
+using PokemonDemo;
 using PokemonLogic;
 using PokemonLogic.BuffResults;
 using PokemonLogic.PokemonData;
