@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayer
 {
-    public class PlayerUser : ABattlePlayer
+    public class PlayerUser : APokemonBattlePlayer
     {
         protected override void SendCommandRequest(Pokemon pokemon)
         {

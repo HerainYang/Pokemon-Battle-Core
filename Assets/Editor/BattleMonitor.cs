@@ -1,4 +1,6 @@
 using System;
+using CoreScripts;
+using CoreScripts.BattlePlayables;
 using Enum;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables;
@@ -61,27 +63,27 @@ namespace Editor
             EditorGUILayout.LabelField("Select target data:");
             _optionChoice = EditorGUILayout.Popup(_optionChoice, _monitorOption);
 
-            if (BattleMgr.Instance.GetCurBattleRound() != null)
+            if (RuntimeLog.CurrentBattleManager.GetCurBattleRound() != null)
             {
-                if (BattleMgr.Instance.GetCurBattleRound().Status == BattleRoundStatus.Running)
+                if (RuntimeLog.CurrentBattleManager.GetCurBattleRound().Status == BattleRoundStatus.Running)
                 {
                     if (GUILayout.Button("Pause auto play battle round"))
                     {
-                        BattleMgr.Instance.SetBattleRoundStatus(BattleRoundStatus.Pause);
+                        RuntimeLog.CurrentBattleManager.SetBattleRoundStatus(BattleRoundStatus.Pause);
                     }
                 }
 
-                if (BattleMgr.Instance.GetCurBattleRound().Status == BattleRoundStatus.Pause)
+                if (RuntimeLog.CurrentBattleManager.GetCurBattleRound().Status == BattleRoundStatus.Pause)
                 {
                     if (GUILayout.Button("Continue auto play battle round"))
                     {
-                        BattleMgr.Instance.SetBattleRoundStatus(BattleRoundStatus.Running);
-                        BattleMgr.Instance.GetCurBattleRound().ExecuteBattleStage();
+                        RuntimeLog.CurrentBattleManager.SetBattleRoundStatus(BattleRoundStatus.Running);
+                        RuntimeLog.CurrentBattleManager.GetCurBattleRound().ExecuteBattleStage();
                     }
 
                     if (GUILayout.Button("Run next playables"))
                     {
-                        BattleMgr.Instance.GetCurBattleRound().ExecuteBattleStage();
+                        RuntimeLog.CurrentBattleManager.GetCurBattleRound().ExecuteBattleStage();
                     }
                 }
             }
@@ -114,7 +116,7 @@ namespace Editor
 
         private void RenderBattlePlayables()
         {
-            var battleRound = BattleMgr.Instance.GetCurBattleRound();
+            var battleRound = RuntimeLog.CurrentBattleManager.GetCurBattleRound();
             if (battleRound == null)
                 return;
             EditorGUILayout.LabelField("Playables list:");

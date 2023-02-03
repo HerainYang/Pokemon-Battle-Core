@@ -1293,7 +1293,7 @@ namespace Managers.BattleMgrComponents
         {
             public static readonly Func<CommonResult, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> SelectIndicesTarget = async (input, source, template) =>
             {
-                ABattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
+                APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
                 int[] targets = BattleMgr.Instance.TryAutoGetTarget(source, template.TargetType);
                 if (targets == null)
                 {
@@ -1310,7 +1310,7 @@ namespace Managers.BattleMgrComponents
             
             public static readonly Func<CommonResult, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> SelectPokemonsTarget = async (input, source, template) =>
             {
-                ABattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
+                APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
                 int[] targets = BattleMgr.Instance.TryAutoGetTarget(source, template.TargetType);
                 if (targets == null)
                 {
@@ -1330,7 +1330,7 @@ namespace Managers.BattleMgrComponents
 
             public static readonly Func<CommonResult, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> SelectSkillsFromPokemonsTarget = async (input, source, template) =>
             {
-                ABattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
+                APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[source.TrainerID];
                 input.PokemonSkillsDic = new Dictionary<Pokemon, List<PokemonRuntimeSkillData>>();
                 foreach (var target in input.TargetsByPokemons)
                 {

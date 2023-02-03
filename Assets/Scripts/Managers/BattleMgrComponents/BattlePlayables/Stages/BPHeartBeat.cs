@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CoreScripts.BattlePlayables;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
 using PokemonDemo;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpHeartBeat : ABattlePlayable
+    public class BpHeartBeat : APokemonBattlePlayable
     {
         private HashSet<string> _waitingList;
         public BpHeartBeat() : base((int)PlayablePriority.HeartBeat)
@@ -16,7 +17,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 
         public override void Execute()
         {
-            EventMgr.Instance.AddListener<ABattlePlayer>(Constant.EventKey.HeartBeatSent, ReceiveHeartBeat);
+            EventMgr.Instance.AddListener<APokemonBattlePlayer>(Constant.EventKey.HeartBeatSent, ReceiveHeartBeat);
             _waitingList = new HashSet<string>();
             foreach (var pair in BattleMgr.Instance.PlayerInGame)
             {
@@ -33,11 +34,11 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         protected override void OnDestroy()
         {
             _waitingList = null;
-            EventMgr.Instance.RemoveListener<ABattlePlayer>(Constant.EventKey.HeartBeatSent, ReceiveHeartBeat);
+            EventMgr.Instance.RemoveListener<APokemonBattlePlayer>(Constant.EventKey.HeartBeatSent, ReceiveHeartBeat);
             BattleMgr.Instance.BattlePlayableEnd();
         }
 
-        private void ReceiveHeartBeat(ABattlePlayer player)
+        private void ReceiveHeartBeat(APokemonBattlePlayer player)
         {
             Debug.Log("[BPHeartBeat] Receive heartbeat from " + player.PlayerInfo.name);
             _waitingList.Remove(player.PlayerInfo.playerID);

@@ -1,3 +1,4 @@
+using CoreScripts.BattlePlayables;
 using Enum;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
@@ -6,7 +7,7 @@ using PokemonLogic.BuffResults;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpEndOfRound : ABattlePlayable
+    public class BpEndOfRound : APokemonBattlePlayable
     {
         public BpEndOfRound() : base((int)PlayablePriority.EndOfRound)
         {

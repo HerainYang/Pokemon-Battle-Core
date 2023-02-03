@@ -3,9 +3,10 @@ using TalesOfRadiance.Scripts.Battle;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using TalesOfRadiance.Scripts.Battle;
 using TalesOfRadiance.Scripts.Battle.Constant;
 using TalesOfRadiance.Scripts.Battle.Managers;
+using TalesOfRadiance.Scripts.Character;
+using Unity.VisualScripting.ReorderableList;
 
 namespace TalesOfRadiance.Editor
 {
@@ -24,18 +25,29 @@ namespace TalesOfRadiance.Editor
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
+            _target.uiCamera = (Camera)EditorGUILayout.ObjectField("UI Camera", _target.uiCamera, typeof(Camera));
+            _target.cameraSpaceCanvas = (Canvas)EditorGUILayout.ObjectField("Camera Space Canvas", _target.cameraSpaceCanvas, typeof(Canvas));
+            
             EditorGUILayout.LabelField("Player Info:", EditorStyles.boldLabel);
             RenderInfo(_target.player);
             
             EditorGUILayout.LabelField("Enemy Info:", EditorStyles.boldLabel);
             RenderInfo(_target.enemy);
+
+
+            EditorGUILayout.LabelField("Team Prefab:", EditorStyles.boldLabel);
+            _target.playerTeam = (CharacterTeam)EditorGUILayout.ObjectField("Player:", _target.playerTeam, typeof(CharacterTeam), true);
+            _target.enemyTeam = (CharacterTeam)EditorGUILayout.ObjectField("Enemy:", _target.enemyTeam, typeof(CharacterTeam), true);
+
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(_target);
             }
+            serializedObject.Update();
+            serializedObject.ApplyModifiedProperties();
         }
 
-        private void RenderInfo(BattleInitInfo info)
+        private void RenderInfo(BattleTeamInfo info)
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("PlayerID:");
@@ -52,20 +64,24 @@ namespace TalesOfRadiance.Editor
             info.squadTypeID = EditorGUILayout.Popup(info.squadTypeID, Constant.SquidTypeStrings);
             EditorGUILayout.EndHorizontal();
 
+            int index = 0;
             for (int i = 0; i < 3; i++)
             {
                 EditorGUILayout.BeginHorizontal();
                 for (int j = 0; j < 3; j++)
                 {
-                    if (ConfigManager.Instance.SquadTypeConfig[info.squadTypeID][i][j] == 1)
+                    if (ConfigManager.Instance.GetSquadTypeByID(info.squadTypeID)[i][j] == 1)
                     {
-                        info.SquadInfoByIndex[i][j] = Int32.Parse(EditorGUILayout.TextField(info.SquadInfoByIndex[i][j].ToString(), GUILayout.Width(EditorGUIUtility.currentViewWidth/3)));
+                        info.squadInfoByIndex[index] = Int32.Parse(EditorGUILayout.TextField(info.squadInfoByIndex[index].ToString(), GUILayout.Width(EditorGUIUtility.currentViewWidth/3)));
+                        // info.SquadInfoByIndex[index] = -1;
                     }
                     else
                     {
                         GUILayout.Label("X", "textfield", GUILayout.Width(EditorGUIUtility.currentViewWidth/3));
+                        info.squadInfoByIndex[index] = -1;
                     }
-                    
+
+                    index++;
                 }
                 EditorGUILayout.EndHorizontal();
             }

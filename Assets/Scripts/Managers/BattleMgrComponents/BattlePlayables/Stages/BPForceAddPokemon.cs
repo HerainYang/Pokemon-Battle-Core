@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
@@ -9,17 +10,17 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpForceAddPokemon : ABattlePlayable
+    public class BpForceAddPokemon : APokemonBattlePlayable
     {
-        private Dictionary<ABattlePlayer, int> _needChangePokemonList; // int here is the position
+        private Dictionary<APokemonBattlePlayer, int> _needChangePokemonList; // int here is the position
         public BpForceAddPokemon() : base((int)PlayablePriority.ForceAddPokemon)
         {
         }
 
         public override void Execute()
         {
-            _needChangePokemonList = new Dictionary<ABattlePlayer, int>();
-            EventMgr.Instance.AddListener<ABattlePlayer>(Constant.EventKey.BattlePokemonForceChangeCommandSent, ReceivePokemonChangeCommand);
+            _needChangePokemonList = new Dictionary<APokemonBattlePlayer, int>();
+            EventMgr.Instance.AddListener<APokemonBattlePlayer>(Constant.EventKey.BattlePokemonForceChangeCommandSent, ReceivePokemonChangeCommand);
             for (int i = 0; i < BattleMgr.Instance.OnStagePokemon.Length; i++)
             {
                 if (BattleMgr.Instance.OnStagePokemon[i] == null)
@@ -63,11 +64,11 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Stages
         protected override void OnDestroy()
         {
             _needChangePokemonList = null;
-            EventMgr.Instance.RemoveListener<ABattlePlayer>(Constant.EventKey.BattlePokemonForceChangeCommandSent, ReceivePokemonChangeCommand);
+            EventMgr.Instance.RemoveListener<APokemonBattlePlayer>(Constant.EventKey.BattlePokemonForceChangeCommandSent, ReceivePokemonChangeCommand);
             BattleMgr.Instance.BattlePlayableEnd();
         }
         
-        private void ReceivePokemonChangeCommand(ABattlePlayer player)
+        private void ReceivePokemonChangeCommand(APokemonBattlePlayer player)
         {
             Debug.Log("[BPForceAddPokemon] Receive pokemon change command from " + player.PlayerInfo.name);
 

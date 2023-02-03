@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
@@ -14,7 +15,7 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 {
-    public class RunTimeSkillBase : ABattlePlayable
+    public class RunTimeSkillBase : APokemonBattlePlayable
     {
         public readonly Pokemon Source;
         public readonly CommonSkillTemplate Template;

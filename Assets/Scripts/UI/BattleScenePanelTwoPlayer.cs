@@ -58,7 +58,7 @@ namespace UI
         private List<Grayout> _opBalls;
 
         //Round Data
-        private ABattlePlayer _curPlayer;
+        private APokemonBattlePlayer _curPlayer;
         private Pokemon _curPokemon;
 
         private CommandRequestType _requestType;
@@ -101,12 +101,12 @@ namespace UI
 
         private void OnEnable()
         {
-            EventMgr.Instance.AddListener<ABattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ShowCommandMask);
+            EventMgr.Instance.AddListener<APokemonBattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ShowCommandMask);
         }
 
         private void OnDisable()
         {
-            EventMgr.Instance.RemoveListener<ABattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ShowCommandMask);
+            EventMgr.Instance.RemoveListener<APokemonBattlePlayer, Pokemon>(Constant.EventKey.BattleCommandSent, ShowCommandMask);
         }
 
         private void OnDestroy()
@@ -127,7 +127,7 @@ namespace UI
             commandMask.SetActive(false);
         }
 
-        private void ShowCommandMask(ABattlePlayer player, Pokemon pokemon)
+        private void ShowCommandMask(APokemonBattlePlayer player, Pokemon pokemon)
         {
             if (_curPlayer == player && Equals(_curPokemon, pokemon))
             {
@@ -135,7 +135,7 @@ namespace UI
             }
         }
 
-        public void StartCommandStage(ABattlePlayer player, Pokemon pokemon)
+        public void StartCommandStage(APokemonBattlePlayer player, Pokemon pokemon)
         {
             _curPlayer = player;
             _curPokemon = pokemon;
@@ -143,7 +143,7 @@ namespace UI
             DefaultBs();
         }
 
-        public void StartForcePokemonSelect(ABattlePlayer player, int onStagePosition)
+        public void StartForcePokemonSelect(APokemonBattlePlayer player, int onStagePosition)
         {
             _curPlayer = player;
             _curPokemon = null;
@@ -287,7 +287,7 @@ namespace UI
             }
         }
 
-        public void SetPokeBallStatus(ABattlePlayer player, Pokemon pokemon, int position)
+        public void SetPokeBallStatus(APokemonBattlePlayer player, Pokemon pokemon, int position)
         {
             if (player == BattleMgr.Instance.LocalPlayer)
             {

@@ -1,4 +1,5 @@
 using System;
+using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayer;
@@ -9,9 +10,9 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpPokemonFaint : ABattlePlayable
+    public class BpPokemonFaint : APokemonBattlePlayable
     {
-        private ABattlePlayer _trainer;
+        private APokemonBattlePlayer _trainer;
         private Pokemon _curPokemon;
         public BpPokemonFaint(Pokemon pokemon) : base((int)PlayablePriority.Immediately)
         {

@@ -1,5 +1,7 @@
+using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using Enum;
+using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.PokemonLogic;
 using Managers.BattleMgrComponents.PokemonLogic.BuffResults;
 using PokemonDemo;
@@ -10,7 +12,7 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpDebut : ABattlePlayable
+    public class BpDebut : APokemonBattlePlayable
     {
         private BasicPlayerInfo _info;
         private Pokemon _pokemonToBeOnStage;

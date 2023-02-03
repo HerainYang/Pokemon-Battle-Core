@@ -24,5 +24,10 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             "魔神之锤",
             "掌天瓶"
         };
+        
+        public struct EventKey
+        {
+            public static string TeamCommandCompleted = "TEAM_COMMAND_COMPLETED";
+        }
     }
 }

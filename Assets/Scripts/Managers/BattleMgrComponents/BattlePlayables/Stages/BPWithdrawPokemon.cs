@@ -1,8 +1,9 @@
+using CoreScripts.BattlePlayables;
 using Enum;
 
 namespace Managers.BattleMgrComponents.BattlePlayables.Stages
 {
-    public class BpWithdrawPokemon : ABattlePlayable
+    public class BpWithdrawPokemon : APokemonBattlePlayable
     {
         private readonly int _onStagePosition;
         public BpWithdrawPokemon(int onStagePosition) : base((int)PlayablePriority.WithDrawPokemon)

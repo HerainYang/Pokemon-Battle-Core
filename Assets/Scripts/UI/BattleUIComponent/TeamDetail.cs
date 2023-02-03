@@ -11,7 +11,7 @@ public class TeamDetail : MonoBehaviour
 {
     [SerializeField] private Transform trainerContent;
 
-    public async void InitTrainerDetail(List<ABattlePlayer> infos)
+    public async void InitTrainerDetail(List<APokemonBattlePlayer> infos)
     {
         foreach (var basicPlayerInfo in infos)
         {

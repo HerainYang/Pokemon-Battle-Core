@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Managers.BattleMgrComponents.BattlePlayer
 {
-    public class PlayerAI : ABattlePlayer
+    public class PlayerAI : APokemonBattlePlayer
     {
         private bool _turn = false;
         protected override void SendCommandRequest(Pokemon pokemon)

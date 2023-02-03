@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CoreScripts.BattlePlayables;
+using CoreScripts.Managers;
 using Cysharp.Threading.Tasks;
 using Enum;
 using Managers.BattleMgrComponents.BattlePlayables;
@@ -22,30 +24,26 @@ using Terrain = Enum.Terrain;
 
 namespace Managers.BattleMgrComponents
 {
-    public class BattleMgr
+    public class BattleMgr : ABattleMgr
     {
         private static BattleMgr _instance;
 
-        public Dictionary<string, ABattlePlayer> PlayerInGame;
+        public readonly Dictionary<string, APokemonBattlePlayer> PlayerInGame;
 
         public BattleScenePanelTwoPlayer BattleScenePanelTwoPlayerUI;
 
         public Pokemon[] OnStagePokemon;
-        public ABattlePlayer[] PokemonStageIndex2PlayerMapping;
-
-        private int _roundCount;
+        public APokemonBattlePlayer[] PokemonStageIndex2PlayerMapping;
 
         private int _maxAllowPokemonOnStage;
 
-        public ABattlePlayer LocalPlayer;
+        public APokemonBattlePlayer LocalPlayer;
 
         public readonly int AwaitTime = 500;
 
         private Weather _curWeather;
 
         private Terrain _curTerrain;
-        
-        private BattleRound _curBattleRound;
 
         private Dictionary<string, object> _playerLog;
 
@@ -53,20 +51,7 @@ namespace Managers.BattleMgrComponents
 
         public Dictionary<PokemonEssentialSystemManager, bool> SystemLoadingDic;
 
-        //For editor only
-#if UNITY_EDITOR
-        public BattleRound GetCurBattleRound()
-        {
-            return _curBattleRound;
-        }
 
-        public void SetBattleRoundStatus(BattleRoundStatus status)
-        {
-            _curBattleRound.Status = status;
-        }
-#endif
-        
-        
         //playerlog
 
         public void PlayerLogStore<T>(string key, T value)
@@ -109,8 +94,7 @@ namespace Managers.BattleMgrComponents
 
         private BattleMgr()
         {
-            PlayerInGame = new Dictionary<string, BattlePlayer.ABattlePlayer>();
-            _roundCount = 0;
+            PlayerInGame = new Dictionary<string, BattlePlayer.APokemonBattlePlayer>();
         }
 
         public void InitData(BasicPlayerInfo[] playerInfos, int maxAllowPokemonOnstage)
@@ -122,7 +106,7 @@ namespace Managers.BattleMgrComponents
             }
 
             OnStagePokemon = new Pokemon[_maxAllowPokemonOnStage * PlayerInGame.Count];
-            PokemonStageIndex2PlayerMapping = new ABattlePlayer[_maxAllowPokemonOnStage * PlayerInGame.Count];
+            PokemonStageIndex2PlayerMapping = new APokemonBattlePlayer[_maxAllowPokemonOnStage * PlayerInGame.Count];
             _playerLog = new Dictionary<string, object>();
             BattleStack = new List<BattleStackItem>();
             SystemLoadingDic = new Dictionary<PokemonEssentialSystemManager, bool>();
@@ -136,7 +120,7 @@ namespace Managers.BattleMgrComponents
             int stageIndex = 0;
             foreach (var pair in PlayerInGame)
             {
-                ABattlePlayer player = pair.Value;
+                APokemonBattlePlayer player = pair.Value;
                 for (int i = 0; i < _maxAllowPokemonOnStage; i++)
                 {
                     PokemonStageIndex2PlayerMapping[stageIndex] = player;
@@ -168,7 +152,7 @@ namespace Managers.BattleMgrComponents
             EventMgr.Instance.RemoveListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
             EventMgr.Instance.RemoveListener<Pokemon, CommonSkillTemplate, CommonResult, PlayablePriority>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
             EventMgr.Instance.RemoveListener<Pokemon, int>(Constant.EventKey.RequestSentPokemonOnStage, RequestSentPokemonOnStage);
-            _curBattleRound = null;
+            CurBattleRound = null;
         }
         
         public async UniTask SetCommandText(string text)
@@ -197,16 +181,6 @@ namespace Managers.BattleMgrComponents
         {
             return _maxAllowPokemonOnStage;
         }
-        
-        public void UpdateRoundCount()
-        {
-            _roundCount++;
-        }
-
-        public int GetRoundCount()
-        {
-            return _roundCount;
-        }
 
         public int GetPokemonOnstagePosition(Pokemon pokemon)
         {
@@ -219,7 +193,7 @@ namespace Managers.BattleMgrComponents
             return -1; // it isn't on the stage
         }
 
-        public int CountOnstagePokemonByPlayer(ABattlePlayer player)
+        public int CountOnstagePokemonByPlayer(APokemonBattlePlayer player)
         {
             int count = 0;
             foreach (var pokemon in OnStagePokemon)
@@ -256,25 +230,25 @@ namespace Managers.BattleMgrComponents
 
         public ABattlePlayable GetCurrentPlayable()
         {
-            return _curBattleRound.GetCurrentPlayable();
+            return CurBattleRound.GetCurrentPlayable();
         }
 
         public async void StartFirstRound()
         {
             await CheckManagerReady();
             BattleScenePanelTwoPlayerUI.SetPlayerInfo();
-            _curBattleRound = new BattleRound(_roundCount);
+            CurBattleRound = new BattleRound(RoundCount, this);
 
             for (int i = 0; i < OnStagePokemon.Length; i++)
             {
                 RequestSentPokemonOnStage(null, i);
             }
 
-            _curBattleRound.Status = BattleRoundStatus.Running;
-            _curBattleRound.ExecuteBattleStage();
+            CurBattleRound.Status = BattleRoundStatus.Running;
+            CurBattleRound.ExecuteBattleStage();
         }
         
-        public async void EndOfCurRound()
+        public override async void EndOfCurRound()
         {
             await BuffMgr.Instance.Update();
 
@@ -282,38 +256,40 @@ namespace Managers.BattleMgrComponents
             LoadNextBattleRound();
         }
 
-        public async void LoadNextBattleRound()
+        private async void LoadNextBattleRound()
         {
-            var temp = new BattleRound(_roundCount);
-            temp.Status = _curBattleRound.Status;
-            temp.InitNormalRound();
-            _curBattleRound.OnDestroy();
-            _curBattleRound = temp;
-            _curBattleRound.AddBattlePlayables(new BpEndOfRound());
-            _curBattleRound.AddBattlePlayables(new BpForceAddPokemon());
-            _curBattleRound.AddBattlePlayables(new BpHeartBeat());
+            Debug.Log("[BattleMgr] Start new round: " + RoundCount);
+            var temp = new BattleRound(RoundCount, this);
+            temp.Status = CurBattleRound.Status;
+            CurBattleRound.OnDestroy();
+            
+            CurBattleRound = temp;
+            CurBattleRound.AddBattlePlayables(new BpCommandStage());
+            CurBattleRound.AddBattlePlayables(new BpEndOfRound());
+            CurBattleRound.AddBattlePlayables(new BpForceAddPokemon());
+            CurBattleRound.AddBattlePlayables(new BpHeartBeat());
             var result = new CommonResult();
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.StartOfRound, result);
-            if (_curBattleRound.Status == BattleRoundStatus.Running)
-                _curBattleRound.ExecuteBattleStage();
+            if (CurBattleRound.Status == BattleRoundStatus.Running)
+                CurBattleRound.ExecuteBattleStage();
         }
         
         public void RemoveSkillPlayablesBySource(Pokemon pokemon)
         {
-            _curBattleRound.RemoveRunTimeSkillPlayables(pokemon);
+            CurBattleRound.RemoveRunTimeSkillPlayables(pokemon);
         }
         
         public int CancelSkill(Pokemon source, int skillId)
         {
-            return _curBattleRound.CancelSkillByPSourcePokemonAndSkillId(source, skillId);
+            return CurBattleRound.CancelSkillByPSourcePokemonAndSkillId(source, skillId);
         }
         
         // should be called by battle playables to hand out the control
         public void BattlePlayableEnd()
         {
             Debug.Log("[BattleMgr] Current battle playable end");
-            if (_curBattleRound.Status == BattleRoundStatus.Running)
-                _curBattleRound.ExecuteBattleStage();
+            if (CurBattleRound.Status == BattleRoundStatus.Running)
+                CurBattleRound.ExecuteBattleStage();
         }
 
         public async void LoadPokemonSkill(Pokemon pokemon, CommonSkillTemplate template, CommonResult preLoadResult, PlayablePriority priority = PlayablePriority.None)
@@ -331,14 +307,14 @@ namespace Managers.BattleMgrComponents
             {
                 Available = result.CanLoadSkill
             };
-            _curBattleRound.AddBattlePlayables(playable);
+            CurBattleRound.AddBattlePlayables(playable);
             
             EventMgr.Instance.Dispatch(Constant.EventKey.BattleCommandSent, PlayerInGame[pokemon.TrainerID], pokemon);
         }
 
         public bool IsLastSkill()
         {
-            return _curBattleRound.IsLastSkill();
+            return CurBattleRound.IsLastSkill();
         }
 
         public BattleStackItem GetPokemonLastSkillData(Pokemon pokemon)
@@ -356,13 +332,13 @@ namespace Managers.BattleMgrComponents
 
         public void UpdateSkillPriority()
         {
-            _curBattleRound.UpdateSkillPriority();
+            CurBattleRound.UpdateSkillPriority();
         }
 
         // pokemon
         private void PokemonFaint(Pokemon pokemon)
         {
-            _curBattleRound.AddBattlePlayables(new BpPokemonFaint(pokemon));
+            CurBattleRound.AddBattlePlayables(new BpPokemonFaint(pokemon));
         }
 
 
@@ -429,7 +405,7 @@ namespace Managers.BattleMgrComponents
             var targetPokemon = OnStagePokemon[onStagePosition];
             if (OnStagePokemon[onStagePosition] != null)
             {
-                _curBattleRound.AddBattlePlayables(new BpWithdrawPokemon(onStagePosition));
+                CurBattleRound.AddBattlePlayables(new BpWithdrawPokemon(onStagePosition));
             }
 
             if (pokemonTobeOnStage == null)
@@ -440,7 +416,7 @@ namespace Managers.BattleMgrComponents
             }
 
             pokemonTobeOnStage.OnStage = true; // so it cannot be automatically select to be sent on stage
-            _curBattleRound.AddBattlePlayables(new BpDebut(player.PlayerInfo, pokemonTobeOnStage, onStagePosition));
+            CurBattleRound.AddBattlePlayables(new BpDebut(player.PlayerInfo, pokemonTobeOnStage, onStagePosition));
             
             EventMgr.Instance.Dispatch(Constant.EventKey.BattleCommandSent, player, targetPokemon);
             EventMgr.Instance.Dispatch(Constant.EventKey.BattlePokemonForceChangeCommandSent, player);

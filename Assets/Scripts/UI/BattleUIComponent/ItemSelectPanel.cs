@@ -20,7 +20,7 @@ namespace UI.BattleUIComponent
         [SerializeField] private Button backBtn;
         [SerializeField] private Transform content;
 
-        private ABattlePlayer _curPlayer;
+        private APokemonBattlePlayer _curPlayer;
         private Pokemon _curPokemon;
         private int _onStagePosition;
 

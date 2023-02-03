@@ -14,17 +14,17 @@ namespace UI
         [SerializeField] private Transform teamContent;
         [SerializeField] private Button startBtn;
 
-        private Dictionary<int, List<ABattlePlayer>> _teamInfoDic;
+        private Dictionary<int, List<APokemonBattlePlayer>> _teamInfoDic;
         private void Awake()
         {
-            _teamInfoDic = new Dictionary<int, List<ABattlePlayer>>();
+            _teamInfoDic = new Dictionary<int, List<APokemonBattlePlayer>>();
             startBtn.onClick.AddListener(StartBtnBehavior);
             foreach (var pair in BattleMgr.Instance.PlayerInGame)
             {
                 var player = pair.Value;
                 if (!_teamInfoDic.ContainsKey(player.PlayerInfo.teamID))
                 {
-                    _teamInfoDic.Add(player.PlayerInfo.teamID, new List<ABattlePlayer>());
+                    _teamInfoDic.Add(player.PlayerInfo.teamID, new List<APokemonBattlePlayer>());
                 }
                 _teamInfoDic[player.PlayerInfo.teamID].Add(player);
             }
@@ -34,7 +34,7 @@ namespace UI
             }
         }
 
-        private async void InitTeamDetails(List<ABattlePlayer> infos)
+        private async void InitTeamDetails(List<APokemonBattlePlayer> infos)
         {
             var handler = Addressables.LoadAssetAsync<GameObject>("TeamDetail");
             await handler;
