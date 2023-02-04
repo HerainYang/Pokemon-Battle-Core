@@ -10,6 +10,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
         public static readonly Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>> NormalAttack = async (input, entity, arg3, arg4) =>
         {
             Debug.LogWarning(((RuntimeHero)entity).Template.Name + " trying to attack " + input.TargetHeroes[0].Template.Name);
+            EffectMgr.Instance.RenderLineFromTo(((RuntimeHero)entity).Anchor.transform.position, input.TargetHeroes[0].Anchor.transform.position);
             await UniTask.Delay(1000);
             return input;
         };
