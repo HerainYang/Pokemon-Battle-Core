@@ -1,5 +1,6 @@
 using CoreScripts.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
+using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using UnityEngine;
 using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
@@ -8,16 +9,19 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
 {
     public class BpMove : ABattlePlayable
     {
-        private ABattleEntity _entity;
         public BpMove(ABattleEntity entity) : base((int)Types.PlayablePriority.Skill)
         {
-            _entity = entity;
+            Source = entity;
+            if (Source is RuntimeHero hero)
+            {
+                Priority = hero.Template.Speed;
+            }
         }
 
         public override async void Execute()
         {
-            var template = _entity.MakeBattleDecision();
-            var playable = await template.SendLoadSkillRequest(_entity);
+            var template = Source.MakeBattleDecision();
+            var playable = await template.SendLoadSkillRequest(Source);
             BattleMgr.Instance.TransferControlToPendingPlayable(playable);
         }
 

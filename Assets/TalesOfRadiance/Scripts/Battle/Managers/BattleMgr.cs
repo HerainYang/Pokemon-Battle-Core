@@ -5,6 +5,7 @@ using CoreScripts.Managers;
 using Cysharp.Threading.Tasks;
 using Enum;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
+using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.BattlePlayables;
 using TalesOfRadiance.Scripts.Character;
 using UnityEngine;
@@ -78,6 +79,13 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         public void TransferControlToPendingPlayable(ABattlePlayable playable)
         {
             CurBattleRound.TransferControlToPendingPlayable(playable);
+        }
+
+        public void HeroDead(RuntimeHero hero)
+        {
+            hero.Properties.IsAlive = false;
+            hero.Anchor.gameObject.SetActive(false);
+            CurBattleRound.RemoveRunTimeSkill(hero);
         }
         
         public async void StartFirstRound()

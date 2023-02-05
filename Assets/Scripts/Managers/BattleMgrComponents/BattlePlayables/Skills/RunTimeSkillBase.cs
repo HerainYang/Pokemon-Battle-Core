@@ -17,7 +17,7 @@ namespace Managers.BattleMgrComponents.BattlePlayables.Skills
 {
     public class RunTimeSkillBase : APokemonBattlePlayable
     {
-        public readonly Pokemon Source;
+        public new readonly Pokemon Source;
         public readonly CommonSkillTemplate Template;
         private readonly List<Func<CommonResult, Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>>> _procedure;
 

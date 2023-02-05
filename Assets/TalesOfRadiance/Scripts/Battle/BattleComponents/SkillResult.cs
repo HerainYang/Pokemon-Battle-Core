@@ -7,6 +7,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
     {
         public int SkillID;
 
+
+        public int Damage;
+
         public List<RuntimeHero> TargetHeroes = new List<RuntimeHero>();
     }
 }

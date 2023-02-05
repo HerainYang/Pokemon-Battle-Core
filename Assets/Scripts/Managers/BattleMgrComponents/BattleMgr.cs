@@ -276,7 +276,7 @@ namespace Managers.BattleMgrComponents
         
         public void RemoveSkillPlayablesBySource(Pokemon pokemon)
         {
-            CurBattleRound.RemoveRunTimeSkillPlayables(pokemon);
+            CurBattleRound.RemoveRunTimeSkillPlayablesPokemonDemo(pokemon);
         }
         
         public int CancelSkill(Pokemon source, int skillId)

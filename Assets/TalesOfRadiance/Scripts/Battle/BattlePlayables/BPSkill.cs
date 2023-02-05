@@ -12,12 +12,11 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
 {
     public class BpSkill : ABattlePlayable
     {
-        private ABattleEntity _sourceEntity;
         private SkillTemplate _skillTemplate;
         private SkillResult _skillResult;
         public BpSkill(ABattleEntity entity, SkillTemplate template, SkillResult preloadData) : base((int)Types.PlayablePriority.None)
         {
-            _sourceEntity = entity;
+            Source = entity;
             _skillTemplate = template;
             _skillResult = preloadData;
         }
@@ -53,7 +52,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
             {
                 for (int i = 0; i < _skillTemplate.ProcedureFunctions.Length; i++)
                 {
-                    _skillResult = await _skillTemplate.ProcedureFunctions[i](_skillResult, _sourceEntity, target, _skillTemplate);
+                    _skillResult = await _skillTemplate.ProcedureFunctions[i](_skillResult, Source, target, _skillTemplate);
                     if (_skillResult == null)
                     {
                         break;

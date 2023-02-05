@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,18 @@ namespace TalesOfRadiance.Scripts.UI
         [SerializeField] private Image hpRemain;
         [SerializeField] private Text textPrefab;
         [SerializeField] private Transform effectTextArea;
+
+        private float _targetHpLengthPercentage = 1f;
+        private float _hpMaxLength;
+        private RectTransform _hpRemainRect;
+
+        private int _lerpRate = 60;
+
+        private void Awake()
+        {
+            _hpMaxLength = hpRemain.transform.parent.GetComponent<RectTransform>().sizeDelta.x;
+            _hpRemainRect = hpRemain.GetComponent<RectTransform>();
+        }
 
         public void ShowEffectText(string content, Color color)
         {
@@ -22,13 +35,24 @@ namespace TalesOfRadiance.Scripts.UI
                 var localPosition = o.transform.localPosition;
                 while (localPosition.y < 0)
                 {
-                    
                     localPosition = new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
                     text.gameObject.transform.localPosition = localPosition;
                     await UniTask.Delay(100);
                 }
+
                 Destroy(text);
             });
+        }
+
+        public void SetTargetHp(float percentage)
+        {
+            _targetHpLengthPercentage = percentage;
+            Debug.Log("target percentage: " + percentage + " expect length: " + (1 - _targetHpLengthPercentage) * _hpMaxLength);
+        }
+
+        public void Update()
+        {
+            _hpRemainRect.sizeDelta = new Vector2(-(1 - _targetHpLengthPercentage) * _hpMaxLength, _hpRemainRect.sizeDelta.y);
         }
     }
 }

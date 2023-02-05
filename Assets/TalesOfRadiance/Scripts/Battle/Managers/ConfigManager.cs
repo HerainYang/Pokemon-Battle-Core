@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics;
-using TalesOfRadiance.Scripts.Battle.CoreClass;
 using UnityEngine;
 
 namespace TalesOfRadiance.Scripts.Battle.Managers
@@ -80,16 +79,139 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
 
         private void InitHero()
         {
-            _heroTemplates.Add(0, new HeroTemplate(0, "海姆达尔", "TORC_ch006"));
-            _heroTemplates.Add(1, new HeroTemplate(1, "神灵大祭司", "TORC_ch020"));
-            _heroTemplates.Add(2, new HeroTemplate(2, "红莲哪吒", "TORC_ch028"));
-            _heroTemplates.Add(3, new HeroTemplate(3, "麒麟", "TORC_ch065"));
-            _heroTemplates.Add(4, new HeroTemplate(4, "女娲", "TORC_ch123"));
+            _heroTemplates.Add(0, new HeroTemplate(0, "海姆达尔", "TORC_ch006")
+            {
+                Attack = 75396,
+                MaxHealth = 1052726,
+                Defence = 2542,
+                Speed = 1804,
+
+                CriticalRate = 0.02f,
+                CriticalDamage = 1.64f,
+                ControlRate = 0.125f,
+                AntiControl = 0.02f,
+                AntiCritical = 0.325f,
+                Accuracy = 1.02f,
+                DamageAvoid = 0.1f,
+                DodgeRate = 0.02f,
+                HealRate = 0f,
+                GetHealRate = 0f,
+                DamageIncrease = 0.021f,
+                PhysicalDamageIncrease = 0f,
+                SpecialDamageIncrease = 0f,
+                PhysicalDamageAvoid = 0.105f,
+                SpecialDamageAvoid = 0f,
+                SustainDamageIncrease = 0f,
+                SustainDamageAvoid = 0f,
+            });
+            _heroTemplates.Add(1, new HeroTemplate(1, "神灵大祭司", "TORC_ch020")
+            {
+                Attack = 82849,
+                MaxHealth = 820257,
+                Defence = 2157,
+                Speed = 1817,
+
+                CriticalRate = 0.02f,
+                CriticalDamage = 1.54f,
+                ControlRate = 0.02f,
+                AntiControl = 0.125f,
+                AntiCritical = 0.125f,
+                Accuracy = 1.02f,
+                DamageAvoid = 0f,
+                DodgeRate = 0.02f,
+                HealRate = 0.1f,
+                GetHealRate = 0f,
+                DamageIncrease = 0.021f,
+                PhysicalDamageIncrease = 0.1f,
+                SpecialDamageIncrease = 0f,
+                PhysicalDamageAvoid = 0f,
+                SpecialDamageAvoid = 0.15f,
+                SustainDamageIncrease = 0f,
+                SustainDamageAvoid = 0.003f,
+            });
+            _heroTemplates.Add(2, new HeroTemplate(2, "红莲哪吒", "TORC_ch028")
+            {
+                Attack = 2036880,
+                MaxHealth = 1561792,
+                Defence = 3480,
+                Speed = 2007,
+
+                CriticalRate = 0.495f,
+                CriticalDamage = 1.95f,
+                ControlRate = 0.02f,
+                AntiControl = 0.02f,
+                AntiCritical = 0.25f,
+                Accuracy = 1.02f,
+                DamageAvoid = 0f,
+                DodgeRate = 0.02f,
+                HealRate = 0f,
+                GetHealRate = 0f,
+                DamageIncrease = 0.171f,
+                PhysicalDamageIncrease = 0f,
+                SpecialDamageIncrease = 0f,
+                PhysicalDamageAvoid = 0f,
+                SpecialDamageAvoid = 0f,
+                SustainDamageIncrease = 0f,
+                SustainDamageAvoid = 0.003f,
+            });
+            _heroTemplates.Add(3, new HeroTemplate(3, "麒麟", "TORC_ch065")
+            {
+                Attack = 109362,
+                MaxHealth = 724466,
+                Defence = 2739,
+                Speed = 1829,
+
+                CriticalRate = 0.285f,
+                CriticalDamage = 1.85f,
+                ControlRate = 0.02f,
+                AntiControl = 0.02f,
+                AntiCritical = 0.07f,
+                Accuracy = 1.02f,
+                DamageAvoid = 0f,
+                DodgeRate = 0.02f,
+                HealRate = 0f,
+                GetHealRate = 0f,
+                DamageIncrease = 0.171f,
+                PhysicalDamageIncrease = 0.15f,
+                SpecialDamageIncrease = 0f,
+                PhysicalDamageAvoid = 0.15f,
+                SpecialDamageAvoid = 0f,
+                SustainDamageIncrease = 0f,
+                SustainDamageAvoid = 0.003f,
+            });
+            _heroTemplates.Add(4, new HeroTemplate(4, "女娲", "TORC_ch123")
+            {
+                Attack = 103524,
+                MaxHealth = 1027987,
+                Defence = 2265,
+                Speed = 2224,
+
+                CriticalRate = 0.02f,
+                CriticalDamage = 1.54f,
+                ControlRate = 0.02f,
+                AntiControl = 0.325f,
+                AntiCritical = 0.175f,
+                Accuracy = 1.02f,
+                DamageAvoid = 0f,
+                DodgeRate = 0.02f,
+                HealRate = 0f,
+                GetHealRate = 0f,
+                DamageIncrease = 0.021f,
+                PhysicalDamageIncrease = 0f,
+                SpecialDamageIncrease = 0f,
+                PhysicalDamageAvoid = 0f,
+                SpecialDamageAvoid = 0.105f,
+                SustainDamageIncrease = 0f,
+                SustainDamageAvoid = 0.093f,
+            });
         }
 
         private void InitSkill()
         {
-            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", new []{BattleLogic.NormalAttack}));
+            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", new[] { BattleLogic.NormalAttack })
+            {
+                DamageIncreaseRate = 1f
+            });
         }
 
         public HeroTemplate GetHeroTemplateByID(int id)

@@ -1,7 +1,7 @@
+using System;
 using Cysharp.Threading.Tasks;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
-using TalesOfRadiance.Scripts.Battle.CoreClass;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.UI;
 using UnityEngine;
@@ -13,6 +13,7 @@ namespace TalesOfRadiance.Scripts.Character
     {
         private GameObject _characterModel;
         private GameObject _heroUI;
+        private HeroStatusUI _heroStatusUI;
         public RuntimeHero Hero;
         public bool isActive = false;
         public async UniTask Init(int index, CharacterTeam team)
@@ -31,10 +32,28 @@ namespace TalesOfRadiance.Scripts.Character
             await uiHandler;
             _heroUI = Instantiate(uiHandler.Result, BattleMgr.Instance.CameraSpaceCanvas.transform);
             Vector3 onScreenPosition = BattleMgr.Instance.UICamera.WorldToScreenPoint(_characterModel.transform.position);
-            Debug.Log((onScreenPosition.x - Screen.width / 2) + " " +  (onScreenPosition.y - Screen.height / 2) + " " + onScreenPosition.z);
             _heroUI.transform.localPosition = new Vector3((onScreenPosition.x - Screen.width / 2), (onScreenPosition.y - Screen.height / 2), 0);
-            
-            _heroUI.GetComponent<HeroStatusUI>().ShowEffectText("Hello", Color.black);
+
+            _heroStatusUI = _heroUI.GetComponent<HeroStatusUI>();
+            _heroStatusUI.ShowEffectText("Hello", Color.black);
+        }
+
+        public void SetTargetHp(float percentage)
+        {
+            _heroStatusUI.SetTargetHp(percentage);
+        }
+
+        private void OnDisable()
+        {
+            _heroUI.SetActive(false);
+        }
+
+        private void OnEnable()
+        {
+            if (_heroUI != null)
+            {
+                _heroUI.SetActive(true);
+            }
         }
     }
 }

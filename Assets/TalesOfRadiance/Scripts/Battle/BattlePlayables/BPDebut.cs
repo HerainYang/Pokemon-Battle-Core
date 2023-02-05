@@ -1,6 +1,5 @@
 using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
-using TalesOfRadiance.Scripts.Battle.CoreClass;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.Character;
 using UnityEngine;

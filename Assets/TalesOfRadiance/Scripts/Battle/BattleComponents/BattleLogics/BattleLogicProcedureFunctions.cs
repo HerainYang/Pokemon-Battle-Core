@@ -7,10 +7,17 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 {
     public static partial class BattleLogic
     {
-        public static readonly Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>> NormalAttack = async (input, entity, arg3, arg4) =>
+        public static readonly Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>> NormalAttack = async (input, entity, target, skillTemplate) =>
         {
-            Debug.LogWarning(((RuntimeHero)entity).Template.Name + " trying to attack " + input.TargetHeroes[0].Template.Name);
-            EffectMgr.Instance.RenderLineFromTo(((RuntimeHero)entity).Anchor.transform.position, input.TargetHeroes[0].Anchor.transform.position);
+            if (entity is not RuntimeHero hero)
+            {
+                throw new Exception("this is function for hero type");
+            }
+
+            var damage = ApplyNormalDamage(hero.Properties.Attack * skillTemplate.DamageIncreaseRate, target).Damage;
+            Debug.LogWarning(hero.Template.Name + " trying to attack " + target.Template.Name + " and deal damage: " + damage);
+            await target.SetTargetHp(damage);
+            EffectMgr.Instance.RenderLineFromTo(hero.Anchor.transform.position, input.TargetHeroes[0].Anchor.transform.position);
             await UniTask.Delay(1000);
             return input;
         };

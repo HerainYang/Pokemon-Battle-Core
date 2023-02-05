@@ -27,7 +27,16 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
                 return null;
             }
 
-            input.TargetHeroes.Add(enemyTeam.Heroes[0]);
+            foreach (var potentialTarget in enemyTeam.Heroes)
+            {
+                if (potentialTarget.Properties.IsAlive)
+                {
+                    input.TargetHeroes.Add(potentialTarget);
+                    break;
+                }
+            }
+
+            
 
             await UniTask.Yield();
             

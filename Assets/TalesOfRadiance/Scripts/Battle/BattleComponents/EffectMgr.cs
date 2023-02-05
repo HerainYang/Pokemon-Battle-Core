@@ -41,6 +41,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
 
                 o.positionCount = bezierNodes.Count;
                 o.SetPositions(bezierNodes.ToArray());
+
+                o.transform.GetChild(0).transform.position = target;
+                
                 await UniTask.Delay(1000);
                 Destroy(o.gameObject);
             }));

@@ -10,6 +10,7 @@ using Managers.BattleMgrComponents.BattlePlayables;
 using Managers.BattleMgrComponents.BattlePlayables.Skills;
 using Managers.BattleMgrComponents.BattlePlayables.Stages;
 using PokemonLogic.PokemonData;
+using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using UnityEngine;
 
 namespace CoreScripts.BattlePlayables
@@ -127,9 +128,25 @@ namespace CoreScripts.BattlePlayables
 
             return stringBuilder.ToString();
         }
+        
+        public void RemoveRunTimeSkill(ABattleEntity source)
+        {
+            if (_remainingPlayables.Count == 0)
+            {
+                return;
+            }
 
-        // this will be call when a pokemon dead
-        public void RemoveRunTimeSkillPlayables(Pokemon source)
+            for (int i = _remainingPlayables.Count - 1; i >= 0; i--)
+            {
+                if (_remainingPlayables[i].Source.Equals(source))
+                {
+                    _remainingPlayables.RemoveAt(i);
+                }
+            }
+        }
+
+        // this will be call when a pokemon dead, this is a design failure
+        public void RemoveRunTimeSkillPlayablesPokemonDemo(Pokemon source)
         {
             if (_remainingPlayables.Count == 0)
             {

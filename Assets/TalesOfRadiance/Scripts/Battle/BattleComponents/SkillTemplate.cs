@@ -12,6 +12,12 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public string SkillName;
         public Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] ProcedureFunctions;
         public Func<SkillResult, ABattleEntity, SkillTemplate, UniTask<SkillResult>>[] OnLoadRequest;
+        
+        public int InitCd;
+        public int Cd;
+        
+        // template attributes
+        public float DamageIncreaseRate;
 
         public SkillTemplate(int skillID, string skillName, Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] procedureFunctions, Func<SkillResult, ABattleEntity, SkillTemplate, UniTask<SkillResult>>[] onLoadRequest = null)
         {

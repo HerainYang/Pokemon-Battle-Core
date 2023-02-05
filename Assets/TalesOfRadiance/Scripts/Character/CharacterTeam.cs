@@ -23,7 +23,8 @@ namespace TalesOfRadiance.Scripts.Character
         {
             foreach (var hero in Heroes)
             {
-                hero.LoadBattleMoveBp();
+                if(hero.Properties.IsAlive) 
+                    hero.LoadBattleMoveBp();
             }
         }
 
