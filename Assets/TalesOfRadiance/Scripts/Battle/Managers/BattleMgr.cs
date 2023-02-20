@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using CoreScripts.BattlePlayables;
 using CoreScripts.Managers;
 using Cysharp.Threading.Tasks;
-using Enum;
+using PokemonDemo.Scripts.Enum;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.BattlePlayables;
@@ -71,7 +71,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             CurBattleRound.AddBattlePlayables(new BpDebut(heroId, characterAnchor, team));
         }
 
-        public void AddBattleEntityMove(ABattleEntity entity)
+        public void AddBattleEntityMove(ATORBattleEntity entity)
         {
             CurBattleRound.AddBattlePlayables(new BpMove(entity));
         }

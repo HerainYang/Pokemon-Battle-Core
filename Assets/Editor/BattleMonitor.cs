@@ -1,14 +1,15 @@
 using System;
 using CoreScripts;
 using CoreScripts.BattlePlayables;
-using Enum;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables;
-using Managers.BattleMgrComponents.BattlePlayables.Skills;
-using Managers.BattleMgrComponents.BattlePlayables.Stages;
-using Managers.BattleMgrComponents.PokemonLogic;
-using PokemonLogic;
-using PokemonLogic.PokemonData;
+using PokemonDemo.Scripts.BattleMgrComponents;
+using PokemonDemo.Scripts.BattlePlayables.Skills;
+using PokemonDemo.Scripts.BattlePlayables.Stages;
+using PokemonDemo.Scripts.Enum;
+using PokemonDemo.Scripts.Managers;
+using PokemonDemo.Scripts.PokemonLogic;
+using PokemonDemo.Scripts.PokemonLogic.PokemonData;
 using UnityEditor;
 using UnityEngine;
 
@@ -148,11 +149,11 @@ namespace Editor
                         DisplaySkillInfo(skillBase.Template);
                     }
 
-                    if (skillBase.Source != null)
+                    if (skillBase.PokemonSource != null)
                     {
-                        if (GUILayout.Button("Source: " + skillBase.Source.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                        if (GUILayout.Button("Source: " + skillBase.PokemonSource.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
                         {
-                            DisplayPokemonInfo(skillBase.Source);
+                            DisplayPokemonInfo(skillBase.PokemonSource);
                         }
                     }
                     else
@@ -234,33 +235,33 @@ namespace Editor
                 foreach (var buffRecorder in listener.Value)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    RenderSingleBuff(buffRecorder);
+                    RenderSingleBuff((PokemonBuffRecorder)buffRecorder);
                     EditorGUILayout.EndHorizontal();
                 }
             }
         }
 
-        private void RenderSingleBuff(BuffRecorder buffRecorder)
+        private void RenderSingleBuff(PokemonBuffRecorder pokemonBuffRecorder)
         {
             EditorGUILayout.BeginHorizontal();
-            if (buffRecorder.IsAttribute)
+            if (pokemonBuffRecorder.IsAttribute)
             {
-                EditorGUILayout.LabelField("Attribute: " + buffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
+                EditorGUILayout.LabelField("Attribute: " + pokemonBuffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
             }
-            else if (buffRecorder.IsWeather)
+            else if (pokemonBuffRecorder.IsWeather)
             {
-                EditorGUILayout.LabelField("Weather: " + buffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
+                EditorGUILayout.LabelField("Weather: " + pokemonBuffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
             }
             else
             {
-                EditorGUILayout.LabelField(buffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
+                EditorGUILayout.LabelField(pokemonBuffRecorder.Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
             }
 
-            if (buffRecorder.Source != null)
+            if (pokemonBuffRecorder.Source != null)
             {
-                if (GUILayout.Button(buffRecorder.Source.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight)))
+                if (GUILayout.Button(((Pokemon)pokemonBuffRecorder.Source).Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight)))
                 {
-                    DisplayPokemonInfo(buffRecorder.Source);
+                    DisplayPokemonInfo(((Pokemon)pokemonBuffRecorder.Source));
                 }
             }
             else
@@ -268,11 +269,11 @@ namespace Editor
                 EditorGUILayout.LabelField("No Source", GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
             }
 
-            if (buffRecorder.Target != null)
+            if (pokemonBuffRecorder.Target != null)
             {
-                if (GUILayout.Button(buffRecorder.Target.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight)))
+                if (GUILayout.Button(((Pokemon)pokemonBuffRecorder.Target).Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight)))
                 {
-                    DisplayPokemonInfo(buffRecorder.Target);
+                    DisplayPokemonInfo(((Pokemon)pokemonBuffRecorder.Target));
                 }
             }
             else
@@ -280,7 +281,7 @@ namespace Editor
                 EditorGUILayout.LabelField("No Target", GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
             }
             
-            EditorGUILayout.LabelField(buffRecorder.EffectLastRound.ToString(), GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
+            EditorGUILayout.LabelField(pokemonBuffRecorder.EffectLastRound.ToString(), GUILayout.MinWidth(_itemMinWidth), GUILayout.MaxWidth(_itemMinWidth * 5), GUILayout.Height(_itemHeight));
 
             EditorGUILayout.EndHorizontal();
         }

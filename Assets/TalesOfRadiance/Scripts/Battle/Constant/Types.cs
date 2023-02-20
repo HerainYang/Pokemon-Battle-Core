@@ -17,5 +17,12 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             WithDrawPokemon,
             Immediately,
         }
+
+        public enum BuffType
+        {
+            Negative,
+            Neutral,
+            Positive
+        }
     }
 }

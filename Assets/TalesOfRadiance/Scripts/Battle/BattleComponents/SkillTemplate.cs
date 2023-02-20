@@ -1,37 +1,47 @@
 using System;
+using CoreScripts.BattleComponents;
 using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.BattlePlayables;
+using TalesOfRadiance.Scripts.Battle.Constant;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents
 {
-    public class SkillTemplate
+    public class SkillTemplate : ASkillTemplate
     {
-        public int SkillID;
-        public string SkillName;
-        public Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] ProcedureFunctions;
-        public Func<SkillResult, ABattleEntity, SkillTemplate, UniTask<SkillResult>>[] OnLoadRequest;
-        
         public int InitCd;
         public int Cd;
         
         // template attributes
         public float DamageIncreaseRate;
+        
+        // buff
+        public readonly Delegate Callback;
+        public float BuffLastRound;
+        public Types.BuffType BuffType;
 
-        public SkillTemplate(int skillID, string skillName, Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] procedureFunctions, Func<SkillResult, ABattleEntity, SkillTemplate, UniTask<SkillResult>>[] onLoadRequest = null)
+        public SkillTemplate(int skillID, string skillName, Func<SkillResult, ATORBattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] procedureFunctions, Func<SkillResult, ATORBattleEntity, SkillTemplate, UniTask<SkillResult>>[] onLoadRequest = null)
         {
-            SkillID = skillID;
-            SkillName = skillName;
-            ProcedureFunctions = procedureFunctions;
-            OnLoadRequest = onLoadRequest;
+            ID = skillID;
+            Name = skillName;
         }
         
-        public async UniTask<ABattlePlayable> SendLoadSkillRequest(ABattleEntity sourceEntity, SkillResult input = null)
+        public SkillTemplate(int id, string name, int effectRound, Delegate callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBack, string buffTriggerEvent)
+        {
+            BuffLastRound = effectRound;
+            Callback = callback;
+            BuffTriggerEvent = buffTriggerEvent;
+            ID = id;
+            Name = name;
+            OnDestroyCallBack = onDestroyCallBack;
+        }
+
+        public async UniTask<ABattlePlayable> SendLoadSkillRequest(ATORBattleEntity sourceEntity, SkillResult input = null)
         {
             if (input == null)
                 input = new SkillResult();
-            input.SkillID = SkillID;
+            input.SkillID = ID;
             if (OnLoadRequest == null)
             {
                 input = await BattleLogics.BattleLogic.SelectOneRandomEnemy(input, sourceEntity, this);
@@ -45,7 +55,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
                     var result = await func(input, sourceEntity, this);
                     if(result == null)
                         return null;
-                    input = result;
+                    input = (SkillResult)result;
                 }
             }
 

@@ -73,7 +73,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
         }
     }
 
-    public class RuntimeHero : ABattleEntity
+    public class RuntimeHero : ATORBattleEntity
     {
         public readonly HeroTemplate Template;
         public readonly Guid RuntimeID;

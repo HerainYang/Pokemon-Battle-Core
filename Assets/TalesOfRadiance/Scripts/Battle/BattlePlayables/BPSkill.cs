@@ -1,8 +1,6 @@
 using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
-using Enum;
 using Managers.BattleMgrComponents;
-using Managers.BattleMgrComponents.PokemonLogic;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using UnityEngine;
 using BattleMgr = TalesOfRadiance.Scripts.Battle.Managers.BattleMgr;
@@ -14,7 +12,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
     {
         private SkillTemplate _skillTemplate;
         private SkillResult _skillResult;
-        public BpSkill(ABattleEntity entity, SkillTemplate template, SkillResult preloadData) : base((int)Types.PlayablePriority.None)
+        public BpSkill(ATORBattleEntity entity, SkillTemplate template, SkillResult preloadData) : base((int)Types.PlayablePriority.None)
         {
             Source = entity;
             _skillTemplate = template;
@@ -52,7 +50,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
             {
                 for (int i = 0; i < _skillTemplate.ProcedureFunctions.Length; i++)
                 {
-                    _skillResult = await _skillTemplate.ProcedureFunctions[i](_skillResult, Source, target, _skillTemplate);
+                    _skillResult = (SkillResult)await _skillTemplate.ProcedureFunctions[i](_skillResult, ((ATORBattleEntity)Source), target, _skillTemplate);
                     if (_skillResult == null)
                     {
                         break;

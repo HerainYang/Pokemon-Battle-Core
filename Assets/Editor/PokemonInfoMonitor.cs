@@ -1,7 +1,5 @@
 using System;
-using Managers.BattleMgrComponents.PokemonLogic;
-using PokemonLogic;
-using PokemonLogic.PokemonData;
+using PokemonDemo.Scripts.PokemonLogic.PokemonData;
 using UnityEditor;
 using UnityEngine;
 

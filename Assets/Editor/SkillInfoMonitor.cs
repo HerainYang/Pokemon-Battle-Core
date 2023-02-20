@@ -1,5 +1,4 @@
-using Managers.BattleMgrComponents.BattlePlayables.Skills;
-using Managers.BattleMgrComponents.PokemonLogic;
+using PokemonDemo.Scripts.BattlePlayables.Skills;
 using UnityEditor;
 
 namespace Editor

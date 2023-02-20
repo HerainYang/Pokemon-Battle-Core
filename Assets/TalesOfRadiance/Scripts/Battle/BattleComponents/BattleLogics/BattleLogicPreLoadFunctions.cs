@@ -9,7 +9,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 {
     public static partial class BattleLogic
     {
-        public static Func<SkillResult, ABattleEntity, SkillTemplate, UniTask<SkillResult>> SelectOneRandomEnemy = async (input, hero, arg3) =>
+        public static Func<SkillResult, ATORBattleEntity, SkillTemplate, UniTask<SkillResult>> SelectOneRandomEnemy = async (input, hero, arg3) =>
         {
             CharacterTeam enemyTeam = null;
             foreach (var team in BattleMgr.Instance.OnStageTeam)

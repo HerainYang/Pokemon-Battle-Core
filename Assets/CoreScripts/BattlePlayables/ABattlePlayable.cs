@@ -1,4 +1,4 @@
-using Managers.BattleMgrComponents.BattlePlayables.Skills;
+using CoreScripts.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 
 namespace CoreScripts.BattlePlayables
@@ -9,7 +9,7 @@ namespace CoreScripts.BattlePlayables
         public int Priority;
         public bool Available;
 
-        public ABattleEntity Source;
+        public IBattleEntity Source;
         
         public abstract void Execute();
         protected abstract void OnDestroy();

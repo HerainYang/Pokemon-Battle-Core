@@ -9,7 +9,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
 {
     public class BpMove : ABattlePlayable
     {
-        public BpMove(ABattleEntity entity) : base((int)Types.PlayablePriority.Skill)
+        public BpMove(ATORBattleEntity entity) : base((int)Types.PlayablePriority.Skill)
         {
             Source = entity;
             if (Source is RuntimeHero hero)
@@ -20,8 +20,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
 
         public override async void Execute()
         {
-            var template = Source.MakeBattleDecision();
-            var playable = await template.SendLoadSkillRequest(Source);
+            ATORBattleEntity source = ((ATORBattleEntity)Source);
+            var template = source.MakeBattleDecision();
+            var playable = await template.SendLoadSkillRequest(source);
             BattleMgr.Instance.TransferControlToPendingPlayable(playable);
         }
 

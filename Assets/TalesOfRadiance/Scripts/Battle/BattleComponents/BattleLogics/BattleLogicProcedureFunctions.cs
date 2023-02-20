@@ -7,7 +7,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 {
     public static partial class BattleLogic
     {
-        public static readonly Func<SkillResult, ABattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>> NormalAttack = async (input, entity, target, skillTemplate) =>
+        public static readonly Func<SkillResult, ATORBattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>> NormalAttack = async (input, entity, target, skillTemplate) =>
         {
             if (entity is not RuntimeHero hero)
             {

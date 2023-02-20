@@ -10,6 +10,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         private static ConfigManager _instance;
         private readonly Dictionary<int, HeroTemplate> _heroTemplates = new Dictionary<int, HeroTemplate>();
         private readonly Dictionary<int, SkillTemplate> _skillTemplates = new Dictionary<int, SkillTemplate>();
+        private readonly Dictionary<int, SkillTemplate> _buffTemplates = new Dictionary<int, SkillTemplate>();
 
         public static ConfigManager Instance
         {
@@ -204,6 +205,11 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0.093f,
             });
+        }
+
+        private void InitBuff()
+        {
+            
         }
 
         private void InitSkill()

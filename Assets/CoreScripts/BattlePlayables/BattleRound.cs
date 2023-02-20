@@ -3,13 +3,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CoreScripts.BattleComponents;
 using CoreScripts.Managers;
-using Enum;
 using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables;
-using Managers.BattleMgrComponents.BattlePlayables.Skills;
-using Managers.BattleMgrComponents.BattlePlayables.Stages;
-using PokemonLogic.PokemonData;
+using PokemonDemo.Scripts.BattlePlayables.Skills;
+using PokemonDemo.Scripts.Enum;
+using PokemonDemo.Scripts.PokemonLogic.PokemonData;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using UnityEngine;
 
@@ -60,7 +60,7 @@ namespace CoreScripts.BattlePlayables
 
         public int CancelSkillByPSourcePokemonAndSkillId(Pokemon pokemon, int skillId)
         {
-            int i = _remainingPlayables.RemoveAll(playable => playable is RunTimeSkillBase && ((RunTimeSkillBase)playable).Template.ID == skillId && Equals(((RunTimeSkillBase)playable).Source, pokemon));
+            int i = _remainingPlayables.RemoveAll(playable => playable is RunTimeSkillBase && ((RunTimeSkillBase)playable).Template.ID == skillId && Equals(((RunTimeSkillBase)playable).PokemonSource, pokemon));
             Debug.Log(GetProcessChart());
             return i;
         }
@@ -129,15 +129,16 @@ namespace CoreScripts.BattlePlayables
             return stringBuilder.ToString();
         }
         
-        public void RemoveRunTimeSkill(ABattleEntity source)
+        public void RemoveRunTimeSkill(IBattleEntity source)
         {
             if (_remainingPlayables.Count == 0)
             {
                 return;
             }
 
-            for (int i = _remainingPlayables.Count - 1; i >= 0; i--)
+            for (var i = _remainingPlayables.Count - 1; i >= 0; i--)
             {
+                if (_remainingPlayables[i].Source == null) continue;
                 if (_remainingPlayables[i].Source.Equals(source))
                 {
                     _remainingPlayables.RemoveAt(i);
@@ -157,7 +158,7 @@ namespace CoreScripts.BattlePlayables
             {
                 if (_remainingPlayables[i] is RunTimeSkillBase)
                 {
-                    if (((RunTimeSkillBase)_remainingPlayables[i]).Source.Equals(source))
+                    if (((RunTimeSkillBase)_remainingPlayables[i]).PokemonSource.Equals(source))
                     {
                         _remainingPlayables.RemoveAt(i);
                     }
@@ -182,7 +183,7 @@ namespace CoreScripts.BattlePlayables
             {
                 if (playable is RunTimeSkillBase && playable.Priority < (int)PlayablePriority.SkillImm)
                 {
-                    playable.Priority = ((RunTimeSkillBase)playable).Source.Speed;
+                    playable.Priority = ((RunTimeSkillBase)playable).PokemonSource.Speed;
                 }
             }
         }

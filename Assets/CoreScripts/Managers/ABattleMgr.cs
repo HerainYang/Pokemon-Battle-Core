@@ -1,5 +1,5 @@
 using CoreScripts.BattlePlayables;
-using Enum;
+using PokemonDemo.Scripts.Enum;
 
 namespace CoreScripts.Managers
 {
@@ -8,7 +8,7 @@ namespace CoreScripts.Managers
         protected int RoundCount;
         
         protected BattleRound CurBattleRound;
-        
+
         //For editor only
 #if UNITY_EDITOR
         public BattleRound GetCurBattleRound()

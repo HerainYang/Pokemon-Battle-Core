@@ -1,5 +1,7 @@
 using Managers;
 using Managers.BattleMgrComponents;
+using PokemonDemo.Scripts.BattleMgrComponents;
+using PokemonDemo.Scripts.Managers;
 using UnityEngine;
 
 namespace PokemonDemo
