@@ -4,7 +4,8 @@ using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.BattlePlayables;
-using TalesOfRadiance.Scripts.Battle.Constant;
+using UnityEngine;
+using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents
 {
@@ -15,16 +16,20 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         
         // template attributes
         public float DamageIncreaseRate;
+        public Types.SkillType SkillType;
         
         // buff
         public readonly Delegate Callback;
-        public float BuffLastRound;
+        public int BuffLastRound;
         public Types.BuffType BuffType;
 
-        public SkillTemplate(int skillID, string skillName, Func<SkillResult, ATORBattleEntity, RuntimeHero, SkillTemplate, UniTask<SkillResult>>[] procedureFunctions, Func<SkillResult, ATORBattleEntity, SkillTemplate, UniTask<SkillResult>>[] onLoadRequest = null)
+        public SkillTemplate(int skillID, string skillName, Types.SkillType skillType, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null)
         {
             ID = skillID;
             Name = skillName;
+            SkillType = skillType;
+            ProcedureFunctions = procedureFunctions;
+            OnLoadRequest = onLoadRequest;
         }
         
         public SkillTemplate(int id, string name, int effectRound, Delegate callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBack, string buffTriggerEvent)
@@ -44,7 +49,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             input.SkillID = ID;
             if (OnLoadRequest == null)
             {
-                input = await BattleLogics.BattleLogic.SelectOneRandomEnemy(input, sourceEntity, this);
+                input = (SkillResult)await BattleLogics.BattleLogic.SelectOneRandomEnemy(input, sourceEntity, this);
                 if(input == null)
                     return null;
             }

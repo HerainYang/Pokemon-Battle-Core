@@ -48,6 +48,10 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         
         public override void EndOfCurRound()
         {
+            foreach (var team in OnStageTeam)
+            {
+                team.UpdateHeroCooldown();
+            }
             LoadNextBattleRound();
         }
         
@@ -94,7 +98,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
 
             await OnStageTeam.Select(o => o.SentHeroOnStage());
             
-            CurBattleRound.Status = BattleRoundStatus.Running;
+            CurBattleRound.Status = BattleRoundStatus.Pause;
             if(CurBattleRound.Status == BattleRoundStatus.Running) 
                 CurBattleRound.ExecuteBattleStage();
         }

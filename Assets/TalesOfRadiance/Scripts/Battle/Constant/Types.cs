@@ -24,5 +24,11 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             Neutral,
             Positive
         }
+
+        public enum SkillType
+        {
+            Passive,
+            Active
+        }
     }
 }

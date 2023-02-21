@@ -5,6 +5,7 @@ using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.Character;
 using UnityEditor;
 using UnityEngine;
+using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
 {
@@ -35,6 +36,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
         public float SpecialDamageAvoid;
         public float SustainDamageIncrease;
         public float SustainDamageAvoid;
+        
 
         //Local Properties
         public int Hp;
@@ -67,6 +69,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
             SpecialDamageAvoid = template.SpecialDamageAvoid;
             SustainDamageIncrease = template.SustainDamageIncrease;
             SustainDamageAvoid = template.SustainDamageAvoid;
+
 
             Hp = MaxHealth;
             IsAlive = true;
@@ -112,7 +115,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
         {
             foreach (var runtimeSkill in RuntimeSkillList)
             {
-                if (runtimeSkill.Cooldown == 0)
+                if (runtimeSkill.Template.SkillType == Types.SkillType.Active && runtimeSkill.Cooldown == 0)
                 {
                     return runtimeSkill.ExecuteSkill();
                 }
@@ -140,6 +143,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
             {
                 Properties.Hp = 0;
                 BattleMgr.Instance.HeroDead(this);
+                await UniTask.Yield();
                 return;
             }
 

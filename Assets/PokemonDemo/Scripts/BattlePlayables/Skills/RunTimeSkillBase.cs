@@ -14,7 +14,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
 {
     public class RunTimeSkillBase : APokemonBattlePlayable
     {
-        public new readonly Pokemon PokemonSource;
+        public readonly Pokemon PokemonSource;
         public readonly CommonSkillTemplate Template;
         private readonly List<Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>> _procedure;
 

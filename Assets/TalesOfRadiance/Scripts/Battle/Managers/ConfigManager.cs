@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics;
 using UnityEngine;
+using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.Managers
 {
@@ -104,6 +105,8 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SpecialDamageAvoid = 0f,
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0f,
+                
+                SkillIndices = new []{2}
             });
             _heroTemplates.Add(1, new HeroTemplate(1, "神灵大祭司", "TORC_ch020")
             {
@@ -132,7 +135,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             });
             _heroTemplates.Add(2, new HeroTemplate(2, "红莲哪吒", "TORC_ch028")
             {
-                Attack = 2036880,
+                Attack = 203688,
                 MaxHealth = 1561792,
                 Defence = 3480,
                 Speed = 2007,
@@ -214,15 +217,29 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
 
         private void InitSkill()
         {
-            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", new[] { BattleLogic.NormalAttack })
+            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", Types.SkillType.Active, new[] { BattleLogic.NormalAttack })
             {
                 DamageIncreaseRate = 1f
+            });
+
+            _skillTemplates.Add(1, new SkillTemplate(1, "天卫之躯", Types.SkillType.Active, new[] { BattleLogic.CleanAllNegativeBuff, BattleLogic.HealWithExceedShield, BattleLogic.TryAddContinuousHealBuff }));
+            
+            _skillTemplates.Add(2, new SkillTemplate(2, "烈焰重斩", Types.SkillType.Active, new[] { BattleLogic.NormalAttack }, new []{BattleLogic.SelectAppendFront})
+            {
+                DamageIncreaseRate = 1f,
+                InitCd = 2,
+                Cd = 4
             });
         }
 
         public HeroTemplate GetHeroTemplateByID(int id)
         {
             return _heroTemplates[id];
+        }
+
+        public SkillTemplate GetBuffTemplateByID(int id)
+        {
+            return _buffTemplates[id];
         }
 
         public int[][] GetSquadTypeByID(int id)

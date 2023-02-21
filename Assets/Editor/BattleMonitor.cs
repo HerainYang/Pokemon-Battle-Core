@@ -10,6 +10,7 @@ using PokemonDemo.Scripts.Enum;
 using PokemonDemo.Scripts.Managers;
 using PokemonDemo.Scripts.PokemonLogic;
 using PokemonDemo.Scripts.PokemonLogic.PokemonData;
+using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using UnityEditor;
 using UnityEngine;
 
@@ -210,6 +211,20 @@ namespace Editor
 
                     break;
                 }
+                case TalesOfRadiance.Scripts.Battle.BattlePlayables.BpDebut debut:
+                {
+                    EditorGUILayout.LabelField("Debut: ", GUILayout.MinWidth(_itemMinWidth - 50), GUILayout.Height(_itemHeight));
+                    if (debut.GetHeroInstance() != null)
+                    {
+                        if (GUILayout.Button(debut.GetHeroInstance().Template.Name, GUILayout.MinWidth(_itemMinWidth), GUILayout.Height(_itemHeight)))
+                        {
+                            DisplayRuntimeHeroInfo(debut.GetHeroInstance());
+                        }
+                    }
+
+
+                    break;
+                }
                 default:
                     EditorGUILayout.LabelField(playable.ToString());
                     break;
@@ -289,6 +304,11 @@ namespace Editor
         private void DisplayPokemonInfo(Pokemon pokemon)
         {
             PokemonInfoMonitor.ShowWindow(pokemon);
+        }
+
+        private void DisplayRuntimeHeroInfo(RuntimeHero hero)
+        {
+            RuntimeHeroMonitor.ShowWindow(hero);
         }
 
         private void DisplaySkillInfo(CommonSkillTemplate template)

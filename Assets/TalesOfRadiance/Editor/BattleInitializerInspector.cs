@@ -21,12 +21,12 @@ namespace TalesOfRadiance.Editor
             _target = ((BattleInitializer)target);
             return base.CreateInspectorGUI();
         }
-
+        
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
-            _target.uiCamera = (Camera)EditorGUILayout.ObjectField("UI Camera", _target.uiCamera, typeof(Camera));
-            _target.cameraSpaceCanvas = (Canvas)EditorGUILayout.ObjectField("Camera Space Canvas", _target.cameraSpaceCanvas, typeof(Canvas));
+            _target.uiCamera = (Camera)EditorGUILayout.ObjectField("UI Camera", _target.uiCamera, typeof(Camera),false);
+            _target.cameraSpaceCanvas = (Canvas)EditorGUILayout.ObjectField("Camera Space Canvas", _target.cameraSpaceCanvas, typeof(Canvas), false);
             
             EditorGUILayout.LabelField("Player Info:", EditorStyles.boldLabel);
             RenderInfo(_target.player);

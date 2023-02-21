@@ -15,8 +15,6 @@ namespace TalesOfRadiance.Scripts.UI
         private float _hpMaxLength;
         private RectTransform _hpRemainRect;
 
-        private int _lerpRate = 60;
-
         private void Awake()
         {
             _hpMaxLength = hpRemain.transform.parent.GetComponent<RectTransform>().sizeDelta.x;

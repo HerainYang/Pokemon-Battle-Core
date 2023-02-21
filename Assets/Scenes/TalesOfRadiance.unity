@@ -969,7 +969,7 @@ MonoBehaviour:
     playerID: E1
     squadTypeID: 0
     godWeaponID: 0
-    squadInfoByIndex: 0000000000000000ffffffffffffffffffffffff000000000000000000000000ffffffff
+    squadInfoByIndex: 0000000001000000ffffffffffffffffffffffff020000000300000004000000ffffffff
   playerTeam: {fileID: 455605233}
   enemyTeam: {fileID: 1647746605}
   cameraSpaceCanvas: {fileID: 1261535273}

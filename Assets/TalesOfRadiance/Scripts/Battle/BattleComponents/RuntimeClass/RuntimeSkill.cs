@@ -1,4 +1,5 @@
 using TalesOfRadiance.Scripts.Battle.Managers;
+using UnityEngine;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
 {
@@ -9,7 +10,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
 
         public RuntimeSkill(int skillID)
         {
-            Template = ConfigManager.Instance.GetSkillTemplateByID(0);
+            Template = ConfigManager.Instance.GetSkillTemplateByID(skillID);
             Cooldown = Template.InitCd;
         }
 

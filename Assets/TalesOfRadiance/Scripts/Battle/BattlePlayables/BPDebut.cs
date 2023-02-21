@@ -1,5 +1,6 @@
 using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
+using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.Character;
 using UnityEngine;
@@ -13,6 +14,14 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
         private int _heroId;
         private CharacterAnchor _anchor;
         private CharacterTeam _team;
+        
+#if UNITY_EDITOR
+        public RuntimeHero GetHeroInstance()
+        {
+            return _anchor.Hero;
+        }
+#endif
+        
         public BpDebut(int heroId, CharacterAnchor anchor, CharacterTeam team) : base((int)Types.PlayablePriority.Debut)
         {
             _heroId = heroId;

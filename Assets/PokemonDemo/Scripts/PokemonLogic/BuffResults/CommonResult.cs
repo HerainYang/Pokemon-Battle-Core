@@ -36,7 +36,6 @@ namespace PokemonDemo.Scripts.PokemonLogic.BuffResults
         public bool CanBeTargeted = true;
         
         public bool CanLoadSkill = true;
-        public int SkillID;
         public int[] TargetsByIndices;
 
         public bool RunTimeSkillBaseIsItem = false;

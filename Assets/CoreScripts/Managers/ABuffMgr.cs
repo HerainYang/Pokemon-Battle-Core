@@ -28,12 +28,11 @@ namespace CoreScripts.Managers
                 for (int i = list.Count - 1; i >= 0; i--)
                 {
                     ABuffRecorder recorder = list[i];
-                    // should remove weather
                     if (recorder.Target != null && recorder.Target.Equals(target))
                     {
                         if (recorder.Template.OnDestroyCallBack != null)
                         {
-                            
+                            await recorder.Template.OnDestroyCallBack(recorder.Source, recorder.Target, recorder);
                         }
                         list.RemoveAt(i);
                     }

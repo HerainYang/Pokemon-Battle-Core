@@ -27,7 +27,7 @@ namespace PokemonDemo.Scripts.Managers
         public Dictionary<string, List<ABuffRecorder>> GetAllBuff()
         {
             return Listeners;
-        } 
+        }
 #endif
 
         public static BuffMgr Instance
@@ -35,8 +35,7 @@ namespace PokemonDemo.Scripts.Managers
             get { return _instance ??= new BuffMgr(); }
         }
 
-        public async UniTask<PokemonBuffRecorder> 
-            AddBuff(Pokemon source, Pokemon target, int buffKey, bool isAttribute, bool isWeather)
+        public async UniTask<PokemonBuffRecorder> AddBuff(Pokemon source, Pokemon target, int buffKey, bool isAttribute, bool isWeather)
         {
             var template = PokemonMgr.Instance.GetBuffTemplateByID(buffKey);
             Debug.Log("[BuffMgr] Receive new buff " + template.Name + " trigger on " + template.BuffTriggerEvent);
@@ -54,14 +53,14 @@ namespace PokemonDemo.Scripts.Managers
             {
                 return null;
             }
-            
+
             var newRecorder = new PokemonBuffRecorder(source, target, template, isAttribute, isWeather);
             listener.Add(newRecorder);
 
             result = new CommonResult();
             result.BuffKey = buffKey;
             await ExecuteBuff(Constant.BuffExecutionTimeKey.OnAddBuff, result, target);
-            
+
             return newRecorder;
         }
 

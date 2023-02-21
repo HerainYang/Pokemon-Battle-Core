@@ -27,6 +27,13 @@ namespace TalesOfRadiance.Scripts.Character
             }
         }
 
+        public RuntimeHero GetHeroByIndex(int index)
+        {
+            if (!_characterAnchors.ContainsKey(index))
+                return null;
+            return !_characterAnchors[index].Hero.Properties.IsAlive ? null : _characterAnchors[index].Hero;
+        }
+
         public async UniTask SentHeroOnStage()
         {
             List<UniTask> tasks = new List<UniTask>();
@@ -49,6 +56,14 @@ namespace TalesOfRadiance.Scripts.Character
             }
             
             await tasks;
+        }
+
+        public void UpdateHeroCooldown()
+        {
+            foreach (var skill in Heroes.SelectMany(hero => hero.RuntimeSkillList.Where(skill => skill.Cooldown > 0)))
+            {
+                skill.Cooldown--;
+            }
         }
 
         public override bool Equals(object other)
