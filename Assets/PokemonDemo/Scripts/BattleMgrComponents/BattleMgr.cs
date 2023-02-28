@@ -17,6 +17,7 @@ using PokemonDemo.Scripts.PokemonLogic.PokemonData;
 using PokemonDemo.Scripts.UI;
 using UnityEngine;
 using Terrain = PokemonDemo.Scripts.Enum.Terrain;
+using Types = CoreScripts.Constant.Types;
 
 namespace PokemonDemo.Scripts.BattleMgrComponents
 {
@@ -139,14 +140,14 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             var pokemonMgr = PokemonMgr.Instance;
 
             EventMgr.Instance.AddListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
-            EventMgr.Instance.AddListener<Pokemon, CommonSkillTemplate, CommonResult, PlayablePriority>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
+            EventMgr.Instance.AddListener<Pokemon, CommonSkillTemplate, PokemonCommonResult, PlayablePriority>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
             EventMgr.Instance.AddListener<Pokemon, int>(Constant.EventKey.RequestSentPokemonOnStage, RequestSentPokemonOnStage);
         }
 
         public void OnBattleEnd()
         {
             EventMgr.Instance.RemoveListener<Pokemon>(Constant.EventKey.PokemonFaint, PokemonFaint);
-            EventMgr.Instance.RemoveListener<Pokemon, CommonSkillTemplate, CommonResult, PlayablePriority>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
+            EventMgr.Instance.RemoveListener<Pokemon, CommonSkillTemplate, PokemonCommonResult, PlayablePriority>(Constant.EventKey.RequestLoadPokemonSkill, LoadPokemonSkill);
             EventMgr.Instance.RemoveListener<Pokemon, int>(Constant.EventKey.RequestSentPokemonOnStage, RequestSentPokemonOnStage);
             CurBattleRound = null;
         }
@@ -229,7 +230,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             return CurBattleRound.GetCurrentPlayable();
         }
 
-        public async void StartFirstRound()
+        public override async void StartFirstRound()
         {
             await CheckManagerReady();
             BattleScenePanelTwoPlayerUI.SetPlayerInfo();
@@ -240,19 +241,28 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 RequestSentPokemonOnStage(null, i);
             }
 
-            CurBattleRound.Status = BattleRoundStatus.Running;
+            CurBattleRound.Status = Types.BattleRoundStatus.Running;
             CurBattleRound.ExecuteBattleStage();
         }
         
         public override async void EndOfCurRound()
         {
-            await BuffMgr.Instance.Update();
+            if (UpdatedRoundCount != RoundCount)
+            {
+                await BuffMgr.Instance.Update();
+                UpdatedRoundCount = RoundCount;
+            }
+
+            if (CurBattleRound.GetRemainingPlayables().Count != 0)
+            {
+                CurBattleRound.ExecuteBattleStage();
+            }
 
             await SetCommandText(" ");
             LoadNextBattleRound();
         }
 
-        private async void LoadNextBattleRound()
+        protected override async void LoadNextBattleRound()
         {
             Debug.Log("[BattleMgr] Start new round: " + RoundCount);
             var temp = new BattleRound(RoundCount, this);
@@ -264,9 +274,9 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             CurBattleRound.AddBattlePlayables(new BpEndOfRound());
             CurBattleRound.AddBattlePlayables(new BpForceAddPokemon());
             CurBattleRound.AddBattlePlayables(new BpHeartBeat());
-            var result = new CommonResult();
+            var result = new PokemonCommonResult();
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.StartOfRound, result);
-            if (CurBattleRound.Status == BattleRoundStatus.Running)
+            if (CurBattleRound.Status == Types.BattleRoundStatus.Running)
                 CurBattleRound.ExecuteBattleStage();
         }
         
@@ -280,20 +290,12 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
         {
             return CurBattleRound.CancelSkillByPSourcePokemonAndSkillId(source, skillId);
         }
-        
-        // should be called by battle playables to hand out the control
-        public void BattlePlayableEnd()
-        {
-            Debug.Log("[BattleMgr] Current battle playable end");
-            if (CurBattleRound.Status == BattleRoundStatus.Running)
-                CurBattleRound.ExecuteBattleStage();
-        }
 
-        public async void LoadPokemonSkill(Pokemon pokemon, CommonSkillTemplate template, CommonResult preLoadResult, PlayablePriority priority = PlayablePriority.None)
+        public async void LoadPokemonSkill(Pokemon pokemon, CommonSkillTemplate template, PokemonCommonResult preLoadResult, PlayablePriority priority = PlayablePriority.None)
         {
-            var result = new CommonResult();
+            var result = new PokemonCommonResult();
             result.SkillID = template.ID;
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeLoadPokemonSkill, result, pokemon);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeLoadPokemonSkill, result, pokemon);
 
             if (!template.IsItem)
             {
@@ -347,7 +349,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 return false;
             }
 
-            CommonResult result = new CommonResult();
+            PokemonCommonResult result = new PokemonCommonResult();
             result.TargetWeather = type;
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.OnWeatherChange, result);
                 
@@ -387,7 +389,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
         public async UniTask WithDrawPokemon(int pokemonStageIndex)
         {
             Pokemon pokemon = OnStagePokemon[pokemonStageIndex];
-            await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeWithdraw, new CommonResult(), pokemon);
+            await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeWithdraw, new PokemonCommonResult(), pokemon);
             RemoveSkillPlayablesBySource(pokemon);
             await BuffMgr.Instance.RemoveAllBuffByTarget(pokemon);
             pokemon.OnStage = false;

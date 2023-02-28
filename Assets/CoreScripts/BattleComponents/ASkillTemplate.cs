@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
 namespace CoreScripts.BattleComponents
@@ -10,8 +11,10 @@ namespace CoreScripts.BattleComponents
         public string BuffTriggerEvent;
         public Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] ProcedureFunctions;
         public Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] OnLoadRequest;
-        public Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> OnDestroyCallBack;
+        public Func<List<Tuple<IBattleEntity, ASkillResult>>, ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] OnProcedureFunctionsEndCallBacks;
 
-        public Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> BuffCallBack;
+        public Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> OnDestroyCallBacks;
+
+        public Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> BuffCallBacks;
     }
 }

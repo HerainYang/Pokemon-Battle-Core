@@ -15,7 +15,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Stages
 
         public override async void Execute()
         {
-            var result = new CommonResult();
+            var result = new PokemonCommonResult();
             _ = await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.EndOfRound, result);
             OnDestroy();
         }

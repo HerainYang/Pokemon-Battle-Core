@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CoreScripts.BattleComponents;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace CoreScripts.Managers
 {
@@ -30,11 +31,11 @@ namespace CoreScripts.Managers
                     ABuffRecorder recorder = list[i];
                     if (recorder.Target != null && recorder.Target.Equals(target))
                     {
-                        if (recorder.Template.OnDestroyCallBack != null)
-                        {
-                            await recorder.Template.OnDestroyCallBack(recorder.Source, recorder.Target, recorder);
-                        }
                         list.RemoveAt(i);
+                        if (recorder.Template.OnDestroyCallBacks != null)
+                        {
+                            await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                        }
                     }
                 }
             }
@@ -52,15 +53,15 @@ namespace CoreScripts.Managers
                     }
                 }
 
-                foreach (var recorder in pair.Value.FindAll(recorder => recorder.EffectLastRound <= 0))
+                var destroyCallBackList = pair.Value.FindAll(recorder => recorder.EffectLastRound <= 0);
+                pair.Value.RemoveAll(buffRecorder => buffRecorder.EffectLastRound <= 0);
+                foreach (var recorder in destroyCallBackList)
                 {
-                    if (recorder.Template.OnDestroyCallBack != null)
+                    if (recorder.Template.OnDestroyCallBacks != null)
                     {
-                        await recorder.Template.OnDestroyCallBack(recorder.Source, recorder.Target, recorder);
+                        await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
                     }
                 }
-
-                pair.Value.RemoveAll(buffRecorder => buffRecorder.EffectLastRound <= 0);
             }
         }
         
@@ -99,11 +100,11 @@ namespace CoreScripts.Managers
         {
             ASkillResult result = await ExecuteBuff(evt, input, null);
             return result;
-        }
+        } 
 
-        // if targetpokemon is null, check all buffs, if targetpokemon is provided, check buffs target on this pokemon
+        // if target is null, check all buffs, if target is provided, check buffs target on this pokemon
         // For example, when A attack B, a buff triggered of B, now the param pokemon is B, not A, if you want it to be A, pass it as another arg
-        public async UniTask<ASkillResult> ExecuteBuff(string evt, ASkillResult input, IBattleEntity targetPokemon)
+        public async UniTask<ASkillResult> ExecuteBuff(string evt, ASkillResult input, IBattleEntity target)
         {
             ASkillResult result = input;
             Listeners.TryGetValue(evt, out var recordList);
@@ -111,12 +112,14 @@ namespace CoreScripts.Managers
             {
                 return result;
             }
-
+            
+            
+            Debug.Log($"[BuffMgr] Trigger event {evt}");
             foreach (var recorder in recordList)
             {
-                if (targetPokemon == null || recorder.Target == null || recorder.Target.Equals(targetPokemon))
+                if (target == null || recorder.Target == null || recorder.Target.Equals(target))
                 {
-                    result = await (recorder.Template).BuffCallBack(result, recorder.Source, recorder.Target, recorder);
+                    result = await (recorder.Template).BuffCallBacks(result, recorder.Source, recorder.Target, recorder);
                 }
             }
 

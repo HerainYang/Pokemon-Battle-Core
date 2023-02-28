@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CoreScripts.BattleComponents;
 using Cysharp.Threading.Tasks;
+using TalesOfRadiance.Scripts.Battle.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.Character;
 using UnityEditor;
@@ -40,6 +42,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
 
         //Local Properties
         public int Hp;
+        public int HealShield;
         public bool IsAlive;
 
         public RuntimeHeroProperties(HeroTemplate template)
@@ -76,7 +79,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
         }
     }
 
-    public class RuntimeHero : ATORBattleEntity
+    public class RuntimeHero : AtorBattleEntity
     {
         public readonly HeroTemplate Template;
         public readonly Guid RuntimeID;
@@ -136,14 +139,48 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
             return base.GetHashCode();
         }
 
+        // by default, heal doesn't recover healShield, damage doesn't not go through healShield
         public async UniTask SetTargetHp(int changeValue)
         {
+            if (changeValue > 0)
+            {
+                await SetTargetHp(changeValue, false);
+            }
+            else
+            {
+                await SetTargetHp(changeValue, true);
+            }
+        }
+
+        public async UniTask SetTargetHp(int changeValue, bool healShield)
+        {
+            if (healShield)
+            {
+                if (changeValue < 0)
+                {
+                    if (Properties.HealShield > 0)
+                    {
+                        int actualDamage = Properties.HealShield + changeValue;
+                        Properties.HealShield = actualDamage > 0 ? actualDamage : 0;
+                        changeValue = actualDamage < 0 ? actualDamage : 0;
+                    }
+                }
+                else
+                {
+                    int shieldHealPoint = (Properties.Hp + changeValue) - Properties.MaxHealth;
+                    if (shieldHealPoint > 0)
+                    {
+                        Properties.HealShield += shieldHealPoint;
+                        changeValue -= shieldHealPoint;
+                    }
+                }
+            }
+
+            
             Properties.Hp += changeValue;
             if (Properties.Hp < 0)
             {
-                Properties.Hp = 0;
-                BattleMgr.Instance.HeroDead(this);
-                await UniTask.Yield();
+                BattleMgr.Instance.AddBattleFaint(this);
                 return;
             }
 
@@ -152,6 +189,8 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass
                 Properties.Hp = Properties.MaxHealth;
             }
             Anchor.SetTargetHp((Properties.Hp * 1f) / Properties.MaxHealth);
+
+            await UniTask.Yield();
         }
     }
 }

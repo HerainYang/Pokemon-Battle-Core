@@ -54,8 +54,19 @@ namespace TalesOfRadiance.Scripts.Character
                     continue;
                 tasks.Add(GenerateAnchor(i));
             }
-            
+
             await tasks;
+        }
+
+        public async UniTask SentGodWeaponOnStage()
+        {
+            var godWeaponPosition = ConfigManager.Instance.GetAnchorPosition(9);
+            await UniTask.Yield();
+        }
+
+        public async UniTask InitTeamAnchor()
+        {
+            await (SentHeroOnStage(), SentGodWeaponOnStage());
         }
 
         public void UpdateHeroCooldown()

@@ -1,3 +1,4 @@
+using CoreScripts.BattleComponents;
 using CoreScripts.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
@@ -9,7 +10,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
 {
     public class BpMove : ABattlePlayable
     {
-        public BpMove(ATORBattleEntity entity) : base((int)Types.PlayablePriority.Skill)
+        public BpMove(AtorBattleEntity entity) : base((int)Types.PlayablePriority.Skill)
         {
             Source = entity;
             if (Source is RuntimeHero hero)
@@ -17,10 +18,17 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
                 Priority = hero.Template.Speed;
             }
         }
+        
+#if UNITY_EDITOR
+        public IBattleEntity GetSource()
+        {
+            return Source;
+        }
+#endif
 
         public override async void Execute()
         {
-            ATORBattleEntity source = ((ATORBattleEntity)Source);
+            AtorBattleEntity source = ((AtorBattleEntity)Source);
             var template = source.MakeBattleDecision();
             var playable = await template.SendLoadSkillRequest(source);
             BattleMgr.Instance.TransferControlToPendingPlayable(playable);

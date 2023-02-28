@@ -18,10 +18,10 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
         public readonly CommonSkillTemplate Template;
         private readonly List<Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>> _procedure;
 
-        public CommonResult RuntimeParam;
+        public PokemonCommonResult RuntimeParam;
 
         // two kinds of skill, target on pokemon, target on position, most of skills target on position, items target on pokemon
-        public RunTimeSkillBase(CommonSkillTemplate template, Pokemon pokemonSource, CommonResult preLoadResult, int priority = (int)PlayablePriority.None) : base(priority == (int)PlayablePriority.None ? BattleLogic.GetPokemonSpeed(pokemonSource) : priority)
+        public RunTimeSkillBase(CommonSkillTemplate template, Pokemon pokemonSource, PokemonCommonResult preLoadResult, int priority = (int)PlayablePriority.None) : base(priority == (int)PlayablePriority.None ? BattleLogic.GetPokemonSpeed(pokemonSource) : priority)
         {
             _procedure = new List<Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>>();
             Template = template;
@@ -86,7 +86,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
                 RuntimeParam.CanMove = true;
                 RuntimeParam.Priority = (int)MovePriority.Normal;
                 RuntimeParam.STemplate = Template;
-                RuntimeParam = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeMove, RuntimeParam, PokemonSource);
+                RuntimeParam = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeMove, RuntimeParam, PokemonSource);
             
                 if (!RuntimeParam.CanMove)
                 {
@@ -109,10 +109,11 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
 
             foreach (var target in RuntimeParam.TargetsByPokemons)
             {
+                PokemonCommonResult localParam = RuntimeParam.Copy();
                 for (int i = 0; i < _procedure.Count; i++)
                 {
-                    RuntimeParam = (CommonResult)await _procedure[i](RuntimeParam, PokemonSource, target, Template);
-                    if (RuntimeParam == null)
+                    localParam = (PokemonCommonResult)await _procedure[i](localParam, PokemonSource, target, Template);
+                    if (localParam == null)
                     {
                         break;
                     }

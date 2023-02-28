@@ -1,4 +1,5 @@
 using CoreScripts.BattlePlayables;
+using CoreScripts.Constant;
 using PokemonDemo.Scripts.Enum;
 
 namespace CoreScripts.Managers
@@ -6,6 +7,30 @@ namespace CoreScripts.Managers
     public abstract class ABattleMgr
     {
         protected int RoundCount;
+
+        //This variable is for buffs that might kill battle entity in their onDestroy callback, the idea is we only update buff manager once a round,
+        //but we might check multiple time to ensure there is no remaining playable (for example bpFaint) to execute.
+        /* Example of use
+         
+            public override async void EndOfCurRound()
+            {
+                if (UpdatedRoundCount != RoundCount)
+                {
+                    await BuffMgr.Instance.Update();
+                    UpdatedRoundCount = RoundCount;
+                }
+    
+                if (CurBattleRound.GetRemainingPlayables().Count != 0)
+                {
+                    CurBattleRound.ExecuteBattleStage();
+                }
+    
+                await SetCommandText(" ");
+                LoadNextBattleRound();
+            }
+        
+         */
+        protected int UpdatedRoundCount;
         
         protected BattleRound CurBattleRound;
 
@@ -16,7 +41,7 @@ namespace CoreScripts.Managers
             return CurBattleRound;
         }
 
-        public void SetBattleRoundStatus(BattleRoundStatus status)
+        public void SetBattleRoundStatus(Types.BattleRoundStatus status)
         {
             CurBattleRound.Status = status;
         }
@@ -39,5 +64,14 @@ namespace CoreScripts.Managers
         }
 
         public abstract void EndOfCurRound();
+
+        protected abstract void LoadNextBattleRound();
+        public abstract void StartFirstRound();
+        
+        public void BattlePlayableEnd()
+        {
+            if (CurBattleRound.Status == Types.BattleRoundStatus.Running)
+                CurBattleRound.ExecuteBattleStage();
+        }
     }
 }

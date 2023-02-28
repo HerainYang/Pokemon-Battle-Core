@@ -6,12 +6,12 @@ using TalesOfRadiance.Scripts.Character;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents
 {
-    public abstract class ATORBattleEntity : IBattleEntity
+    public abstract class AtorBattleEntity : IBattleEntity
     {
         public readonly CharacterTeam Team;
         public List<RuntimeSkill> RuntimeSkillList;
 
-        protected ATORBattleEntity(CharacterTeam team)
+        protected AtorBattleEntity(CharacterTeam team)
         {
             Team = team;
         }

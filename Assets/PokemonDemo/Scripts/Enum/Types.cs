@@ -40,15 +40,6 @@ namespace PokemonDemo.Scripts.Enum
         Fail
     }
 
-    public enum BattleRoundStatus
-    {
-        Prepare,
-        Running,
-        Pause,
-        End,
-        Dead,
-    }
-
     public enum SkillType
     {
         Physical,

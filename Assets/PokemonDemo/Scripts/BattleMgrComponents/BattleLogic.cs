@@ -79,14 +79,14 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 statsChange = statsChange > 0 ? statsChange : 0;
             float changeRate = statsChange >= 0 ? (statsChange + 2f) / 2f : 2f / (math.abs(statsChange) + 2);
             attack = (int)(attack * changeRate);
-            CommonResult result = new CommonResult
+            PokemonCommonResult result = new PokemonCommonResult
             {
                 PokemonStat =
                 {
                     [(int)PokemonStat.SpecialAttack] = attack
                 }
             };
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.GettingSpecialAttack, result, source);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.GettingSpecialAttack, result, source);
             return result.PokemonStat[(int)PokemonStat.SpecialAttack];
         }
 
@@ -121,15 +121,15 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             return (int)(damage * PokemonMgr.Instance.GetTypeResistance((int)template.Type, (int)target.Type) * sameTypeAttackBonus);
         }
 
-        private static async UniTask<Tuple<SkillEffect, CommonResult>> DamageCalculate(Pokemon source, Pokemon target, CommonSkillTemplate template)
+        private static async UniTask<Tuple<SkillEffect, PokemonCommonResult>> DamageCalculate(Pokemon source, Pokemon target, CommonSkillTemplate template)
         {
             bool criticalHit = await CriticalHitCalculate(source.GetStatusChange(PokemonStat.CriticalHit) + template.CriticalRate);
             SkillEffect effect = SkillEffect.SuperEffective;
-            var result = new CommonResult
+            var result = new PokemonCommonResult
             {
                 Power = template.Power
             };
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingSkillPower, result);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingSkillPower, result);
 
             int damage = 0;
             if (template.SkillType == SkillType.Physical)
@@ -149,7 +149,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             result.STemplate = template;
             result.SkillSource = source;
             result.SkillTarget = target;
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingFinalDamage, result);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingFinalDamage, result);
 
             if (Math.Abs(PokemonMgr.Instance.GetTypeResistance((int)template.Type, (int)target.Type) - 0.5) < 0.001)
             {
@@ -176,19 +176,19 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 effect = SkillEffect.CriticalDamage;
             }
 
-            return new Tuple<SkillEffect, CommonResult>(effect, result);
+            return new Tuple<SkillEffect, PokemonCommonResult>(effect, result);
         }
 
         private static async UniTask<bool> HitAccuracyCalculate(Pokemon source, Pokemon target, CommonSkillTemplate template)
         {
             //A=(B*E*F*G)
             int b = (int)Math.Floor(255f * template.Accuracy / 100f);
-            var result = new CommonResult
+            var result = new PokemonCommonResult
             {
                 Accuracy = b,
                 MustHit = false
             };
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.GettingSkillAccuracy, result);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.GettingSkillAccuracy, result);
             if (result.MustHit)
             {
                 return true;
@@ -202,7 +202,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             float accuracy = b * f;
             result.Accuracy = accuracy;
             result.MustHit = false;
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingHit, result);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingHit, result);
             if (result.MustHit)
             {
                 return true;
@@ -218,12 +218,12 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             criticalValue = criticalValue > 3 ? 3 : (criticalValue < 0 ? 0 : criticalValue);
             float criticalRate = (float)(criticalValue == 0 ? 1f / 24f : 1f / Math.Pow(2, 3 - criticalValue));
             bool isCritical = GetRandomDouble() < criticalRate;
-            var result = new CommonResult
+            var result = new PokemonCommonResult
             {
                 CriticalRate = criticalRate,
                 IsCritical = isCritical
             };
-            result = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingCriticalDamage, result);
+            result = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.CalculatingCriticalDamage, result);
 
             return result.IsCritical;
         }
@@ -231,10 +231,10 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
         // if damage can be blocked
         private static async UniTask<bool> CanApplyDamage(Pokemon source, Pokemon target, CommonSkillTemplate template)
         {
-            var task0 = BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeApplyDamage, new CommonResult(){Priority = (int)DamageApplyPriority.Normal, ShouldSuccess = true, Message = null, STemplate = template}, source);
-            var task1 = BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeTakingDamage, new CommonResult(){Priority = (int)DamageApplyPriority.Normal, ShouldSuccess = true, Message = null, STemplate = template}, target);
+            var task0 = BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeApplyDamage, new PokemonCommonResult(){Priority = (int)DamageApplyPriority.Normal, ShouldSuccess = true, Message = null, STemplate = template}, source);
+            var task1 = BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeTakingDamage, new PokemonCommonResult(){Priority = (int)DamageApplyPriority.Normal, ShouldSuccess = true, Message = null, STemplate = template}, target);
             var (sourceResult, targetResult) = await UniTask.WhenAll(task0, task1);
-            CommonResult result = (CommonResult)(((CommonResult)sourceResult).Priority > ((CommonResult)targetResult).Priority ? sourceResult : targetResult);
+            PokemonCommonResult result = (PokemonCommonResult)(((PokemonCommonResult)sourceResult).Priority > ((PokemonCommonResult)targetResult).Priority ? sourceResult : targetResult);
             bool success = result.ShouldSuccess;
 
             if (result.Message != null)
@@ -293,7 +293,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 var target = BattleMgr.Instance.OnStagePokemon[index];
                 if (target != null)
                 {
-                    CommonResult output = (CommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.WhenGettingTarget, new CommonResult(), target);
+                    PokemonCommonResult output = (PokemonCommonResult)await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.WhenGettingTarget, new PokemonCommonResult(), target);
                     if (source != null && output.CanBeTargeted != true && !Equals(target, source))
                     {
                         continue;
@@ -311,7 +311,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             bool success = await target.ChangeHp(hpChange);
             if (!success)
                 return;
-            CommonResult cResult = new CommonResult
+            PokemonCommonResult cResult = new PokemonCommonResult
             {
                 SkillSource = source,
                 SkillTarget = target,
@@ -366,7 +366,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryDamageMaxHpByPercentage = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -375,13 +375,13 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 return input;
             };
 
-            private static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<CommonResult>> ApplyDamage = async (source, target, template) =>
+            private static readonly Func<Pokemon, Pokemon, CommonSkillTemplate, UniTask<PokemonCommonResult>> ApplyDamage = async (source, target, template) =>
             {
                 bool hit = await HitAccuracyCalculate(source, target, template);
                 if (!hit)
                 {
                     await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText("But it doesn't hit " + target.Name);
-                    return new CommonResult() { ShouldContinueSkill = false };
+                    return new PokemonCommonResult() { ShouldContinueSkill = false };
                 }
 
                 var success = await CanApplyDamage(source, target, template);
@@ -395,14 +395,14 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 else
                 {
                     await PrintSkillEffectResult(SkillEffect.NotEffective);
-                    return new CommonResult() { ShouldContinueSkill = false };
+                    return new PokemonCommonResult() { ShouldContinueSkill = false };
                 }
             };
 
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryApplyDamage = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -417,13 +417,13 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> FocusPunchCharge = async (input, source, target, _) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
 
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(pokemonSource.Name + " starts charging");
                 await BuffMgr.Instance.AddBuff(source, source, 3);
-                CommonResult skillPreLoadResult = new CommonResult()
+                PokemonCommonResult skillPreLoadResult = new PokemonCommonResult()
                 {
                     TargetsByIndices = new[] { BattleMgr.Instance.GetPokemonOnstagePosition(pokemonTarget) }
                 };
@@ -442,7 +442,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryAddGuard = async (input, source, target, _) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 if (BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(1)))
@@ -517,7 +517,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryChangePokemonStat = async (input, _, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonTarget = (Pokemon)target;
 
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -532,7 +532,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryAddLeechSeed = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -549,7 +549,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> RecoverFromPreviousDamage = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -575,7 +575,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryAddParalysis = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -603,7 +603,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> HiddenPower = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
@@ -686,7 +686,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryPlayRoughDeBuff = async (input, _, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
                 if (ProbTrigger(skillTemplate.SpecialEffectProb))
@@ -726,7 +726,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SetPokemonAppear = async (input, source, _, _) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(12));
                 BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(13));
@@ -739,7 +739,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> AddTaunt = async (input, source, target, _) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
                 if (BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(14)))
@@ -826,7 +826,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> RecoverPpByValue = async (input, source, target, template) =>
             {
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 var pokemonTarget = (Pokemon)target;
                 var skillTemplate = (CommonSkillTemplate)template;
                 List<PokemonRuntimeSkillData> skillData = skillResult.PokemonSkillsDic[pokemonTarget];
@@ -867,9 +867,9 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> GuardBuff = async (previousResult, buffSource, _, _) =>
             {
                 var source = (Pokemon)buffSource;
-                var commonResult = (CommonResult)previousResult;
+                var commonResult = (PokemonCommonResult)previousResult;
                 await UniTask.Yield();
-                CommonResult result = new CommonResult()
+                PokemonCommonResult result = new PokemonCommonResult()
                 {
                     Priority = (int)(DamageApplyPriority.Guard),
                     ShouldSuccess = false, 
@@ -883,13 +883,13 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> MoldBreakerBuff = async (previousResult, buffSource, _, _) =>
             {
                 var source = (Pokemon)buffSource;
-                var commonResult = (CommonResult)previousResult;
+                var commonResult = (PokemonCommonResult)previousResult;
                 await UniTask.Yield();
-                CommonResult result = default(CommonResult);
-                if (previousResult == default(CommonResult))
+                PokemonCommonResult result = default(PokemonCommonResult);
+                if (previousResult == default(PokemonCommonResult))
                 {
                     System.Diagnostics.Debug.Assert(previousResult != null, nameof(previousResult) + " != null");
-                    result = new CommonResult()
+                    result = new PokemonCommonResult()
                     {
                         Priority = (int)(DamageApplyPriority.MoldBreaker),
                         ShouldSuccess = true,
@@ -929,7 +929,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ChangeSkillDamageBySource = async (input, _, buffTarget, recorder) =>
             {
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 // if this buff is 
                 if (commonResult.SkillSource != null && buffTarget != null && !Equals(commonResult.SkillSource, buffTarget))
@@ -948,7 +948,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> AddWeatherBuffAfterDebut = async (input, buffSource, _, recorder) =>
             {
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 int length = recorder.EffectLastRound;
 
@@ -978,7 +978,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var source = (Pokemon)buffSource;
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 int damage = await DamageMaxHpByPercentage(null, target, ((CommonSkillTemplate)recorder.Template).PercentageDamage, null);
                 var list = await FindTarget(new[] { pokemonRecorder.SourceIndex }, source);
@@ -995,7 +995,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> DecreaseSpeedByPercentage = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (commonResult.BuffKey != 9)
                     return input;
@@ -1017,7 +1017,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> IfBuffAllowMove = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (ProbTrigger(((CommonSkillTemplate)recorder.Template).SpecialEffectProb))
                 {
@@ -1038,7 +1038,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var source = (Pokemon)buffSource;
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 _ = BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(target)).SetPokemonImg(target.ImageKey);
                 BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(target)).SetAttributeText(BattleMgr.Instance.PlayerLogGet<AttributesTemplate>(target.RuntimeID + "_ATTRIBUTE").Name);
@@ -1069,7 +1069,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> CannotBeTarget = async (input, _, _, _) =>
             {
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 commonResult.CanBeTargeted = false;
                 await UniTask.Yield();
                 return input;
@@ -1078,7 +1078,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> AutoAddSkillPlayable = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 foreach (var id in ((CommonSkillTemplate)recorder.Template).TargetSkillID)
                 {
@@ -1103,7 +1103,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                         default:
                             if (pokemonRecorder.SkillTargets != null)
                             {
-                                CommonResult skillPreLoadResult = new CommonResult()
+                                PokemonCommonResult skillPreLoadResult = new PokemonCommonResult()
                                 {
                                     TargetsByIndices = pokemonRecorder.SkillTargets
                                 };
@@ -1127,7 +1127,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> AttackSkillOnly = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 CommonSkillTemplate template = commonResult.STemplate;
                 if (template.SkillType == SkillType.Status)
@@ -1143,7 +1143,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ForbiddenSkill = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (pokemonRecorder.ForbiddenCommonSkill.ID == commonResult.STemplate.ID)
                 {
@@ -1158,7 +1158,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> IncreaseDamageWhenLowHp = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (commonResult.STemplate.Type != ((CommonSkillTemplate)recorder.Template).Type)
                 {
@@ -1177,7 +1177,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> WeatherStatChange = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 switch (commonResult.TargetWeather)
                 {
@@ -1211,7 +1211,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> WeatherMatchSetHp = async (input, _, buffTarget, _) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 if (BattleMgr.Instance.GetWeather() == Weather.HarshSunlight || BattleMgr.Instance.GetWeather() == Weather.ExtremelyHarshSunlight || BattleMgr.Instance.GetWeather() == Weather.StrongSunLight)
                 {
                     await BattleMgr.Instance.SetCommandText(target.TrainerID + " " + target.Name + "'s Hp decrease 1/8 because of solar power attribute");
@@ -1224,7 +1224,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> RecoverStatAtWeatherEnd = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 switch (BattleMgr.Instance.GetWeather())
                 {
@@ -1258,7 +1258,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> StaticBuff = async (input, _, buffTarget, _) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 if (commonResult.STemplate == null)
                 {
                     return input;
@@ -1280,7 +1280,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> TypeDamageResistantWithStatChange = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (commonResult.Priority > (int)((CommonSkillTemplate)recorder.Template).BuffDamageApplyPriority)
                 {
@@ -1308,7 +1308,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> Limber = async (input, _, buffTarget, _) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 if (commonResult.BuffKey == 8)
                 {
                     commonResult.CanAddBuff = false;
@@ -1326,7 +1326,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ImposterDebut = async (input, _, buffTarget, _) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 await PokemonMgr.Instance.GetSkillTemplateByID(144).SendLoadSkillRequest(target);
                 return input;
             };
@@ -1334,7 +1334,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> SheerForce = async (input, _, buffTarget, _) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 if (commonResult.STemplate.ProcedureFunctions.Length <= 1)
                 {
                     return input;
@@ -1393,7 +1393,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                         }
                         else
                         {
-                            input = (CommonResult)await func(input, buffTarget, pokemonTarget, commonResult.STemplate);
+                            input = (PokemonCommonResult)await func(input, buffTarget, pokemonTarget, commonResult.STemplate);
                         }
                     }
                 }
@@ -1405,7 +1405,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> CursedBody = async (input, _, buffTarget, recorder) =>
             {
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (ProbTrigger(((CommonSkillTemplate)recorder.Template).SpecialEffectProb))
                 {
@@ -1423,7 +1423,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var source = (Pokemon)buffSource;
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 if (!Equals(commonResult.SkillTarget, buffTarget))
                     return input;
@@ -1437,7 +1437,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var source = (Pokemon)buffSource;
                 var target = (Pokemon)buffTarget;
-                var commonResult = (CommonResult)input;
+                var commonResult = (PokemonCommonResult)input;
                 var pokemonRecorder = (PokemonBuffRecorder)recorder;
                 await UniTask.Delay(BattleMgr.Instance.AwaitTime);
                 await source.ChangeHp(commonResult.Damage);
@@ -1452,7 +1452,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var pokemonSource = (Pokemon)source;
                 var skillTemplate = (CommonSkillTemplate)template;
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[pokemonSource.TrainerID];
                 int[] targets = BattleMgr.Instance.TryAutoGetTarget(pokemonSource, skillTemplate.TargetType);
                 if (targets == null)
@@ -1472,7 +1472,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var pokemonSource = (Pokemon)source;
                 var skillTemplate = (CommonSkillTemplate)template;
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[pokemonSource.TrainerID];
                 int[] targets = BattleMgr.Instance.TryAutoGetTarget(pokemonSource, skillTemplate.TargetType);
                 if (targets == null)
@@ -1495,7 +1495,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var pokemonSource = (Pokemon)source;
                 var skillTemplate = (CommonSkillTemplate)template;
-                var skillResult = (CommonResult)input;
+                var skillResult = (PokemonCommonResult)input;
                 APokemonBattlePlayer player = BattleMgr.Instance.PlayerInGame[pokemonSource.TrainerID];
                 skillResult.PokemonSkillsDic = new Dictionary<Pokemon, List<PokemonRuntimeSkillData>>();
                 foreach (var target in skillResult.TargetsByPokemons)

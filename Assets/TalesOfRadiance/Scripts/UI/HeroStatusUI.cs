@@ -45,7 +45,6 @@ namespace TalesOfRadiance.Scripts.UI
         public void SetTargetHp(float percentage)
         {
             _targetHpLengthPercentage = percentage;
-            Debug.Log("target percentage: " + percentage + " expect length: " + (1 - _targetHpLengthPercentage) * _hpMaxLength);
         }
 
         public void Update()

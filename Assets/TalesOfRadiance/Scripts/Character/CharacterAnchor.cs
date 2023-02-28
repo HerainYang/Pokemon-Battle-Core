@@ -35,7 +35,6 @@ namespace TalesOfRadiance.Scripts.Character
             _heroUI.transform.localPosition = new Vector3((onScreenPosition.x - Screen.width / 2), (onScreenPosition.y - Screen.height / 2), 0);
 
             _heroStatusUI = _heroUI.GetComponent<HeroStatusUI>();
-            _heroStatusUI.ShowEffectText("Hello", Color.black);
         }
 
         public void SetTargetHp(float percentage)
@@ -43,8 +42,23 @@ namespace TalesOfRadiance.Scripts.Character
             _heroStatusUI.SetTargetHp(percentage);
         }
 
+        public void ShowEffectText(string content, Color color = default(Color))
+        {
+            if (color == default(Color))
+            {
+                _heroStatusUI.ShowEffectText(content, Color.black);
+            }
+            else
+            {
+                _heroStatusUI.ShowEffectText(content, color);
+            }
+            
+        }
+
         private void OnDisable()
         {
+            if(_heroUI == null)
+                return;
             _heroUI.SetActive(false);
         }
 

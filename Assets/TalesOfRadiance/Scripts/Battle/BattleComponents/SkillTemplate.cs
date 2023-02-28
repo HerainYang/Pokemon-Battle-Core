@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CoreScripts.BattleComponents;
 using CoreScripts.BattlePlayables;
 using Cysharp.Threading.Tasks;
@@ -17,39 +18,61 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         // template attributes
         public float DamageIncreaseRate;
         public Types.SkillType SkillType;
+
+        public float PercentageDamageRate;
+        public float[] AddBuffPossibility;
+        public int NextSkillID;
+
+        public int TargetCount = 1;
+        
+        //reason see BattleLogic.TryAddBuffInBuffList
+        public int[][] AddBuffIndex;
+
+        public int[] PassiveSkillBuffList;
         
         // buff
-        public readonly Delegate Callback;
         public int BuffLastRound;
         public Types.BuffType BuffType;
+        public float ValueChangeRate;
+        public bool RecoverHp;
 
-        public SkillTemplate(int skillID, string skillName, Types.SkillType skillType, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null)
+        public SkillTemplate(int skillID, string skillName, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null,  Func<List<Tuple<IBattleEntity, ASkillResult>>, ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onProcedureFunctionsEndCallBacks = null)
         {
             ID = skillID;
             Name = skillName;
-            SkillType = skillType;
+            SkillType = Types.SkillType.Active;
             ProcedureFunctions = procedureFunctions;
             OnLoadRequest = onLoadRequest;
+            OnProcedureFunctionsEndCallBacks = onProcedureFunctionsEndCallBacks; 
         }
         
-        public SkillTemplate(int id, string name, int effectRound, Delegate callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBack, string buffTriggerEvent)
+        public SkillTemplate(int skillID, string skillName, int[] passiveSkillBuffList)
+        {
+            ID = skillID;
+            Name = skillName;
+            SkillType = Types.SkillType.Passive;
+            PassiveSkillBuffList = passiveSkillBuffList;
+        }
+        
+        public SkillTemplate(int id, string name, int effectRound, Types.BuffType buffType, Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBacks, string buffTriggerEvent)
         {
             BuffLastRound = effectRound;
-            Callback = callback;
+            BuffCallBacks = callback;
             BuffTriggerEvent = buffTriggerEvent;
             ID = id;
             Name = name;
-            OnDestroyCallBack = onDestroyCallBack;
+            OnDestroyCallBacks = onDestroyCallBacks;
+            BuffType = buffType;
         }
 
-        public async UniTask<ABattlePlayable> SendLoadSkillRequest(ATORBattleEntity sourceEntity, SkillResult input = null)
+        public async UniTask<ABattlePlayable> SendLoadSkillRequest(AtorBattleEntity sourceEntity, SkillResult input = null)
         {
             if (input == null)
                 input = new SkillResult();
             input.SkillID = ID;
             if (OnLoadRequest == null)
             {
-                input = (SkillResult)await BattleLogics.BattleLogic.SelectOneRandomEnemy(input, sourceEntity, this);
+                input = (SkillResult)await BattleLogics.BattleLogic.SelectRandomEnemy(input, sourceEntity, this);
                 if(input == null)
                     return null;
             }

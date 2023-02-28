@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics;
@@ -22,6 +23,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         {
             InitHero();
             InitSkill();
+            InitBuff();
         }
 
         private readonly int[][][] _squadTypeConfig = new[]
@@ -77,6 +79,10 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             new Vector3(-2, 0, -2),
             new Vector3(0, 0, -2),
             new Vector3(2, 0, -2),
+            
+            //god weapon position
+            
+            new Vector3(4, 0, 4)
         };
 
         private void InitHero()
@@ -106,7 +112,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0f,
                 
-                SkillIndices = new []{2}
+                SkillIndices = new []{1, 2, 3, 4}
             });
             _heroTemplates.Add(1, new HeroTemplate(1, "神灵大祭司", "TORC_ch020")
             {
@@ -207,28 +213,102 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SpecialDamageAvoid = 0.105f,
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0.093f,
+                
+                SkillIndices = new []{5, 7}
             });
         }
 
         private void InitBuff()
         {
+            _buffTemplates.Add(0, new SkillTemplate(0, "BUFF测试", 3, Types.BuffType.Positive, BattleLogic.ForBuffTest, null, "FORTESTBUFF"));
+            _buffTemplates.Add(1, new SkillTemplate(1, "ChangeHpOnDebut", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.ChangeHpMax, BattleLogic.UndoChangeHpMax, Constant.Constant.BuffEventKey.AfterDebut)
+            {
+                ValueChangeRate = 0.4f,
+                RecoverHp = true
+            });
+            _buffTemplates.Add(2, new SkillTemplate(2, "ChangeDefenceOnDebut", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.ChangeDefense, BattleLogic.UndoChangeDefense, Constant.Constant.BuffEventKey.AfterDebut)
+            {
+                ValueChangeRate = 0.2f
+            });
+            _buffTemplates.Add(3, new SkillTemplate(3, "IncreaseDamageAvoidWhenHpDecrease", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.IncreaseDamageAvoidWhenHpDecrease, BattleLogic.UndoIncreaseDamageAvoidWhenHpDecrease, Constant.Constant.BuffEventKey.AfterDamage)
+            {
+                ValueChangeRate = 3,
+            });
+            _buffTemplates.Add(4, new SkillTemplate(4, "持续回复", 2, Types.BuffType.Positive, BattleLogic.ContinueHeal, null, Constant.Constant.BuffEventKey.AfterRound)
+            {
+                PercentageDamageRate = 0.15f,
+            });
+            _buffTemplates.Add(5, new SkillTemplate(5, "烧伤", 2, Types.BuffType.Negative, BattleLogic.Burnt, null, Constant.Constant.BuffEventKey.AfterRound)
+            {
+                PercentageDamageRate = 0.2f,
+            });
+            _buffTemplates.Add(6, new SkillTemplate(6, "烈焰审判", 2, Types.BuffType.Negative, BattleLogic.FireJudgement, null, Constant.Constant.BuffEventKey.AfterApplyDamage)
+            {
+                PercentageDamageRate = 0.2f,
+            });
+            _buffTemplates.Add(7, new SkillTemplate(7, "破晓守护前置", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.DawnProtectPrefix, BattleLogic.UndoDawnProtect, Constant.Constant.BuffEventKey.BeforeRound)
+            {
+                TargetCount = 1
+            });
             
+            _buffTemplates.Add(8, new SkillTemplate(8, "破晓守护", 1, Types.BuffType.Positive, BattleLogic.DawnProtect, null, Constant.Constant.BuffEventKey.BeforeDamage)
+            {
+                PercentageDamageRate = 0.75f
+            });
+            
+            _buffTemplates.Add(9, new SkillTemplate(9, "永生幻境", 2, Types.BuffType.Positive, BattleLogic.Immortal, BattleLogic.UndoImmortal, Constant.Constant.BuffEventKey.BeforeFaint)
+            {
+                PercentageDamageRate = 0.75f
+            });
         }
 
         private void InitSkill()
         {
-            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", Types.SkillType.Active, new[] { BattleLogic.NormalAttack })
+            _skillTemplates.Add(0, new SkillTemplate(0, "普通攻击", new[] { BattleLogic.NormalAttack })
             {
                 DamageIncreaseRate = 1f
             });
 
-            _skillTemplates.Add(1, new SkillTemplate(1, "天卫之躯", Types.SkillType.Active, new[] { BattleLogic.CleanAllNegativeBuff, BattleLogic.HealWithExceedShield, BattleLogic.TryAddContinuousHealBuff }));
-            
-            _skillTemplates.Add(2, new SkillTemplate(2, "烈焰重斩", Types.SkillType.Active, new[] { BattleLogic.NormalAttack }, new []{BattleLogic.SelectAppendFront})
+            _skillTemplates.Add(1, new SkillTemplate(1, "天卫之躯", new[] { BattleLogic.CleanAllNegativeBuff, BattleLogic.HealWithExceedShield, BattleLogic.TryAddContinuousHealBuff }, new []{BattleLogic.SelectSelf})
             {
-                DamageIncreaseRate = 1f,
-                InitCd = 2,
+                PercentageDamageRate = 0.2f,
+                InitCd = 1,
                 Cd = 4
+            });
+            
+            _skillTemplates.Add(2, new SkillTemplate(2, "烈焰重斩", new[] { BattleLogic.TryApplyPercentageDamage, BattleLogic.TryAddBuffInBuffList }, new []{BattleLogic.SelectAppendFront})
+            {
+                PercentageDamageRate = 0.2f,
+                AddBuffPossibility = new []{0.7f},
+                AddBuffIndex = new []{ new []{5, 6}},
+                InitCd = 1,
+                Cd = 4
+            });
+            
+            _skillTemplates.Add(3, new SkillTemplate(3, "不屈守护神", new []{1, 2, 3}));
+            
+            _skillTemplates.Add(4, new SkillTemplate(4, "破晓守护", new []{7}));
+            
+            _skillTemplates.Add(5, new SkillTemplate(5, "炼石补天", new [] {BattleLogic.StealOneBuff}, new []{BattleLogic.SelectRandomEnemy})
+            {
+                InitCd = 1,
+                Cd = 2,
+                TargetCount = 3
+            });
+            
+            _skillTemplates.Add(7, new SkillTemplate(7, "抟土造人I", new [] {BattleLogic.TryBringBackToLife, BattleLogic.ExecuteNextSkillPlayable}, new []{BattleLogic.SelectOneFaintTeammate})
+            {
+                NextSkillID = 8,
+                InitCd = 2,
+                Cd = 4,
+            });
+            
+            _skillTemplates.Add(8, new SkillTemplate(8, "抟土造人II", new [] {BattleLogic.TryAddBuffInBuffList, BattleLogic.TryHealByAttack}, new []{BattleLogic.SelectAllTeammate, BattleLogic.SelectLowestHpFromPrevious})
+            {
+                AddBuffPossibility = new []{1f},
+                AddBuffIndex = new []{ new []{9}},
+                TargetCount = 2,
+                DamageIncreaseRate = 1.5f
             });
         }
 

@@ -9,9 +9,11 @@ using Managers.BattleMgrComponents;
 using Managers.BattleMgrComponents.BattlePlayables;
 using PokemonDemo.Scripts.BattlePlayables.Skills;
 using PokemonDemo.Scripts.Enum;
+using PokemonDemo.Scripts.Managers;
 using PokemonDemo.Scripts.PokemonLogic.PokemonData;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using UnityEngine;
+using Types = CoreScripts.Constant.Types;
 
 namespace CoreScripts.BattlePlayables
 {
@@ -19,7 +21,8 @@ namespace CoreScripts.BattlePlayables
     {
         private List<ABattlePlayable> _battlePlayables;
         private List<ABattlePlayable> _remainingPlayables;
-        public BattleRoundStatus Status;
+        private Stack<ABattlePlayable> _ownershipWaitingList;
+        public Types.BattleRoundStatus Status;
         private readonly int _roundCount;
         private readonly ABattleMgr _battleMgr;
         
@@ -39,7 +42,8 @@ namespace CoreScripts.BattlePlayables
         {
             _battlePlayables = new List<ABattlePlayable>();
             _remainingPlayables = new List<ABattlePlayable>();
-            Status = BattleRoundStatus.Prepare;
+            _ownershipWaitingList = new Stack<ABattlePlayable>();
+            Status = Types.BattleRoundStatus.Prepare;
             _battleMgr = battleMgr;
             _battleMgr.UpdateRoundCount();
             _roundCount = roundCount;
@@ -49,12 +53,13 @@ namespace CoreScripts.BattlePlayables
         {
             _battlePlayables = null;
             _remainingPlayables = null;
-            Status = BattleRoundStatus.Dead;
+            Status = Types.BattleRoundStatus.Dead;
             Debug.Log("[BattleRound] OnDestroy: Round " + _roundCount);
         }
 
         public void AddBattlePlayables(ABattlePlayable playable)
         {
+            Debug.Log(playable.ToString() + " have been added");
             _remainingPlayables.Add(playable);
         }
 
@@ -80,6 +85,15 @@ namespace CoreScripts.BattlePlayables
         // to run stage one by one, just call this function when you need to process
         public void ExecuteBattleStage()
         {
+            Debug.Log("Remaining round: " + _remainingPlayables.Count);
+            if (_ownershipWaitingList.Count != 0)
+            {
+                
+                EventMgr.Instance.Dispatch("BATTLE_PLAYABLE_RETURN_OWNER_SHIP_" + _ownershipWaitingList.Peek().GetHashCode());
+                _ownershipWaitingList.Pop();
+                return;
+            }
+            
             if (_remainingPlayables.Count == 0)
             {
                 _battleMgr.EndOfCurRound();
@@ -98,8 +112,7 @@ namespace CoreScripts.BattlePlayables
             _remainingPlayables.Remove(next);
             _battlePlayables.Add(next);
 
-            Debug.Log("[BattleRound] Executing " + _battlePlayables.Last());
-            Debug.Log(GetProcessChart());
+            Debug.Log("[BattleRound] Executing " + _battlePlayables.Last() + "\n" + GetProcessChart());
 
             _battlePlayables.Last().Execute();
         }
@@ -174,6 +187,17 @@ namespace CoreScripts.BattlePlayables
             }
 
             _battlePlayables.Add(targetPlayable);
+            _battlePlayables.Last().Execute();
+        }
+
+        public void BorrowControlToPendingPlayable(ABattlePlayable self, ABattlePlayable targetPlayable)
+        {
+            if (_remainingPlayables.Contains(targetPlayable))
+            {
+                _remainingPlayables.Remove(targetPlayable);
+            }
+            _battlePlayables.Add(targetPlayable);
+            _ownershipWaitingList.Push(self);
             _battlePlayables.Last().Execute();
         }
 

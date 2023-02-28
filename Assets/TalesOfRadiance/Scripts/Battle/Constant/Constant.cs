@@ -29,5 +29,17 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
         {
             public static string TeamCommandCompleted = "TEAM_COMMAND_COMPLETED";
         }
+
+        public struct BuffEventKey
+        {
+            public const string AfterDebut = "AFTER_DEBUT";
+            public const string BeforeDamage = "BEFORE_DAMAGE";
+            public const string AfterDamage = "AFTER_DAMAGE";
+            public const string BeforeRound = "BEFORE_ROUND";
+            public const string AfterRound = "AFTER_ROUND";
+            public const string AfterHeal = "AFTER_HEAL";
+            public const string AfterApplyDamage = "AFTER_APPLY_DAMAGE";
+            public const string BeforeFaint = "BEFORE_FAINT";
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Stages
                 _commandWaitList.Add(new Tuple<APokemonBattlePlayer, Guid>(player, pokemon.RuntimeID));
             }
             
-            await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeRequirePokemonCommand, new CommonResult());
+            await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeRequirePokemonCommand, new PokemonCommonResult());
 
             foreach (var player in BattleMgr.Instance.PlayerInGame)
             {

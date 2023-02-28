@@ -36,7 +36,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Stages
 
             await pokemonBasicInfoInstance.Attribute.InitAttribute(pokemonBasicInfoInstance);
             BattleMgr.Instance.OnStagePokemon[_onStagePosition] = pokemonBasicInfoInstance;
-            CommonResult result = new CommonResult();
+            PokemonCommonResult result = new PokemonCommonResult();
             result.DebutPokemon = pokemonBasicInfoInstance;
             result.TargetWeather = BattleMgr.Instance.GetWeather();
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.AfterDebut, result, pokemonBasicInfoInstance);

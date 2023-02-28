@@ -7,6 +7,7 @@ using PokemonDemo.Scripts.BattlePlayables.Skills;
 using PokemonDemo.Scripts.PokemonLogic;
 using PokemonDemo.Scripts.PokemonLogic.BuffResults;
 using PokemonDemo.Scripts.PokemonLogic.PokemonData;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace PokemonDemo.Scripts.Managers
@@ -46,9 +47,9 @@ namespace PokemonDemo.Scripts.Managers
                 Listeners.Add(template.BuffTriggerEvent, listener);
             }
 
-            CommonResult result = new CommonResult();
+            PokemonCommonResult result = new PokemonCommonResult();
             result.BuffKey = buffKey;
-            result = (CommonResult)await ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeAddBuff, result, target);
+            result = (PokemonCommonResult)await ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeAddBuff, result, target);
             if (!result.CanAddBuff)
             {
                 return null;
@@ -57,7 +58,7 @@ namespace PokemonDemo.Scripts.Managers
             var newRecorder = new PokemonBuffRecorder(source, target, template, isAttribute, isWeather);
             listener.Add(newRecorder);
 
-            result = new CommonResult();
+            result = new PokemonCommonResult();
             result.BuffKey = buffKey;
             await ExecuteBuff(Constant.BuffExecutionTimeKey.OnAddBuff, result, target);
 

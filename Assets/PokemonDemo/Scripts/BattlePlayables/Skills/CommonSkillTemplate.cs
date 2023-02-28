@@ -77,14 +77,14 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
         }
         
         // buff constructor
-        public CommonSkillTemplate(int id, string name, int effectRound, Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBack, string buffTriggerEvent)
+        public CommonSkillTemplate(int id, string name, int effectRound, Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBacks, string buffTriggerEvent)
         {
             EffectRound = effectRound;
-            BuffCallBack = callback;
+            BuffCallBacks = callback;
             BuffTriggerEvent = buffTriggerEvent;
             ID = id;
             Name = name;
-            OnDestroyCallBack = onDestroyCallBack;
+            OnDestroyCallBacks = onDestroyCallBacks;
         }
 
         public CommonSkillTemplate(int id, string name, SkillTargetType targetType, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] funcOnLoad = null)
@@ -144,15 +144,15 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
             return commonSkillTemplate;
         }
 
-        public async UniTask SendLoadSkillRequest(Pokemon curPokemon, CommonResult input = null)
+        public async UniTask SendLoadSkillRequest(Pokemon curPokemon, PokemonCommonResult input = null)
         {
             if (input == null)
-                input = new CommonResult();
+                input = new PokemonCommonResult();
             input.SkillID = ID;
             input.RunTimeSkillBaseIsItem = IsItem;
             if (OnLoadRequest == null)
             {
-                input = (CommonResult)await BattleLogic.PreLoadProcedure.SelectIndicesTarget(input, curPokemon, this);
+                input = (PokemonCommonResult)await BattleLogic.PreLoadProcedure.SelectIndicesTarget(input, curPokemon, this);
                 if(input == null)
                     return;
             }
@@ -163,7 +163,7 @@ namespace PokemonDemo.Scripts.BattlePlayables.Skills
                     var result = await func(input, curPokemon, this);
                     if(result == null)
                         return;
-                    input = (CommonResult)result;
+                    input = (PokemonCommonResult)result;
                 }
             }
 

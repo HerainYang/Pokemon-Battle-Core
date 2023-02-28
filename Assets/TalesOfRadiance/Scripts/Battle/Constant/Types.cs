@@ -14,7 +14,7 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             Item = 5001,
             CommandStage = 10000,
             Debut,
-            WithDrawPokemon,
+            Faint,
             Immediately,
         }
 
