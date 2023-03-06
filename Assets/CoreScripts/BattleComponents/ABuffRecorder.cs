@@ -10,5 +10,7 @@ namespace CoreScripts.BattleComponents
         public IBattleEntity Target;
         
         public ASkillTemplate Template;
+
+        public bool DeletePending = false;
     }
 }

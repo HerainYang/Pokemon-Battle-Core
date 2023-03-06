@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using CoreScripts.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.BattleComponents;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using TalesOfRadiance.Scripts.Character;
+using UnityEngine;
 using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
@@ -53,19 +55,40 @@ namespace TalesOfRadiance.Scripts.Battle.BattlePlayables
             {
                 if (runtimeSkill.Template.SkillType == Types.SkillType.Passive)
                 {
+                    List<RuntimeHero> targetHeroes = new List<RuntimeHero>();
+                    var input = new SkillResult();
+                    if (runtimeSkill.Template.OnLoadRequest == null)
+                    {
+                        targetHeroes.Add(null);
+                    }
+                    else
+                    {
+                        foreach (var func in runtimeSkill.Template.OnLoadRequest)
+                        {
+                            input = (SkillResult)await func(input, _anchor.Hero, runtimeSkill.Template);
+                        }
+
+                        targetHeroes = input.TargetHeroes;
+                    }
                     foreach (var buffIndex in runtimeSkill.Template.PassiveSkillBuffList)
                     {
-                        await BuffMgr.Instance.AddBuff(_anchor.Hero, _anchor.Hero, buffIndex, true);
+                        foreach (var hero in targetHeroes)
+                        {
+                            await BuffMgr.Instance.AddBuff(_anchor.Hero, hero, buffIndex, true);
+                        }
+                        
                     }
                 }
             }
 
+            
             await BuffMgr.Instance.ExecuteBuff(Constant.Constant.BuffEventKey.AfterDebut, new SkillResult(), _anchor.Hero);
             OnDestroy();
         }
 
         protected override void OnDestroy()
         {
+            
             BattleMgr.Instance.BattlePlayableEnd();
         }
     }

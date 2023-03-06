@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CoreScripts.BattleComponents;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace CoreScripts.Managers
 {
+    /*
+     * todo:
+     * new delete machinism: mark then delete
+     */
     public abstract class ABuffMgr
     {
         protected readonly Dictionary<string, List<ABuffRecorder>> Listeners = new Dictionary<string, List<ABuffRecorder>>();
@@ -29,9 +34,9 @@ namespace CoreScripts.Managers
                 for (int i = list.Count - 1; i >= 0; i--)
                 {
                     ABuffRecorder recorder = list[i];
-                    if (recorder.Target != null && recorder.Target.Equals(target))
+                    if (!recorder.DeletePending && recorder.Target != null && recorder.Target.Equals(target))
                     {
-                        list.RemoveAt(i);
+                        recorder.DeletePending = true;
                         if (recorder.Template.OnDestroyCallBacks != null)
                         {
                             await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
@@ -39,7 +44,31 @@ namespace CoreScripts.Managers
                     }
                 }
             }
-        } 
+        }
+
+        public async UniTask RemoveAllAttributeBySource(IBattleEntity source)
+        {
+            foreach (var pair in Listeners)
+            {
+                var list = pair.Value;
+                if (list.Count == 0)
+                {
+                    continue;
+                }
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    ABuffRecorder recorder = list[i];
+                    if (!recorder.DeletePending && recorder.IsAttribute && recorder.Source != null && recorder.Source.Equals(source))
+                    {
+                        recorder.DeletePending = true;
+                        if (recorder.Template.OnDestroyCallBacks != null)
+                        {
+                            await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                        }
+                    }
+                }
+            }
+        }
         
         public async UniTask Update()
         {
@@ -52,9 +81,10 @@ namespace CoreScripts.Managers
                         buffRecorder.EffectLastRound -= 1;
                     }
                 }
-
-                var destroyCallBackList = pair.Value.FindAll(recorder => recorder.EffectLastRound <= 0);
-                pair.Value.RemoveAll(buffRecorder => buffRecorder.EffectLastRound <= 0);
+                
+                // delete all buff to be expire
+                var destroyCallBackList = pair.Value.FindAll(recorder => recorder.EffectLastRound <= 0 && !recorder.DeletePending);
+                pair.Value.RemoveAll(buffRecorder => buffRecorder.EffectLastRound <= 0 && !buffRecorder.DeletePending);
                 foreach (var recorder in destroyCallBackList)
                 {
                     if (recorder.Template.OnDestroyCallBacks != null)
@@ -62,10 +92,15 @@ namespace CoreScripts.Managers
                         await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
                     }
                 }
+                
+                //delete all buff in the delete pending list, callback function should be already called, so do nothing here
+                pair.Value.RemoveAll(recorder => recorder.DeletePending);
+
+                //delete here
             }
         }
         
-        public virtual void RemoveBuffByTarget(IBattleEntity target, ASkillTemplate buffTemplate)
+        public virtual async UniTask RemoveBuffByTarget(IBattleEntity target, ASkillTemplate buffTemplate)
         {
             Listeners.TryGetValue(buffTemplate.BuffTriggerEvent, out var listener);
             if (listener == null)
@@ -73,26 +108,36 @@ namespace CoreScripts.Managers
                 return;
             }
 
-            listener.RemoveAll(r => r.Target != null && r.Template == buffTemplate && r.Target.Equals(target));
+            foreach (var buffRecorder in listener.Where(buffRecorder => !buffRecorder.DeletePending && buffRecorder.Target != null && buffRecorder.Template == buffTemplate && buffRecorder.Target.Equals(target)))
+            {
+                if(buffRecorder.Template.OnDestroyCallBacks != null) 
+                    await buffRecorder.Template.OnDestroyCallBacks(buffRecorder.Source, buffRecorder.Target, buffRecorder);
+                buffRecorder.DeletePending = true;
+            }
         }
         
-        public virtual void RemoveBuffBySource(IBattleEntity source, ASkillTemplate buffTemplate)
+        public virtual async UniTask RemoveBuffBySource(IBattleEntity source, ASkillTemplate buffTemplate)
         {
             Listeners.TryGetValue(buffTemplate.BuffTriggerEvent, out var listener);
             if (listener == null)
             {
                 return;
             }
-
-            listener.RemoveAll(r => r.Source != null && r.Template == buffTemplate && r.Source.Equals(source));
+            
+            foreach (var buffRecorder in listener.Where(buffRecorder => !buffRecorder.DeletePending && buffRecorder.Source != null && buffRecorder.Template == buffTemplate && buffRecorder.Source.Equals(source)))
+            {
+                if(buffRecorder.Template.OnDestroyCallBacks != null) 
+                    await buffRecorder.Template.OnDestroyCallBacks(buffRecorder.Source, buffRecorder.Target, buffRecorder);
+                buffRecorder.DeletePending = true;
+            }
         }
-        
-        public bool Exist(IBattleEntity target, ASkillTemplate buffTemplate)
+
+        public bool ExistActiveBuff(IBattleEntity target, ASkillTemplate buffTemplate)
         {
             Listeners.TryGetValue(buffTemplate.BuffTriggerEvent, out var listener);
             if (listener == null)
                 return false;
-            return listener.Exists(r => r.Target.Equals(target) && r.Template == buffTemplate);
+            return listener.Exists(r => r.Target != null && r.Target.Equals(target) && r.Template == buffTemplate && !r.DeletePending);
         }
         
         // Here the pokemon is the target of buff, it is not the target of a specific attack
@@ -104,7 +149,7 @@ namespace CoreScripts.Managers
 
         // if target is null, check all buffs, if target is provided, check buffs target on this pokemon
         // For example, when A attack B, a buff triggered of B, now the param pokemon is B, not A, if you want it to be A, pass it as another arg
-        public async UniTask<ASkillResult> ExecuteBuff(string evt, ASkillResult input, IBattleEntity target)
+        public virtual async UniTask<ASkillResult> ExecuteBuff(string evt, ASkillResult input, IBattleEntity target)
         {
             ASkillResult result = input;
             Listeners.TryGetValue(evt, out var recordList);
@@ -115,15 +160,25 @@ namespace CoreScripts.Managers
             
             
             Debug.Log($"[BuffMgr] Trigger event {evt}");
-            foreach (var recorder in recordList)
+            // it has to be like this way because we might add something to list during buff execution
+            for (int i = 0; i < recordList.Count; i++)
             {
-                if (target == null || recorder.Target == null || recorder.Target.Equals(target))
-                {
-                    result = await (recorder.Template).BuffCallBacks(result, recorder.Source, recorder.Target, recorder);
-                }
+                var recorder = recordList[i];
+                input = await ExecuteBuffByRecorder(recorder, input, target);
             }
 
             return result;
+        }
+
+        public async UniTask<ASkillResult> ExecuteBuffByRecorder(ABuffRecorder recorder, ASkillResult input, IBattleEntity target)
+        {
+            
+            if (!recorder.DeletePending && (target == null || recorder.Target == null || recorder.Target.Equals(target)))
+            {
+                input = await (recorder.Template).BuffCallBacks(input, recorder.Source, recorder.Target, recorder);
+            }
+
+            return input;
         }
     }
 }

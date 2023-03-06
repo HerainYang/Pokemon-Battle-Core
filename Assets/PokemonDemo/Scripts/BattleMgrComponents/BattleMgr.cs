@@ -370,7 +370,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
 
             if (_curWeather != Weather.None)
             {
-                BuffMgr.Instance.RemoveAllWeatherBuff();
+                await BuffMgr.Instance.RemoveAllWeatherBuff();
             }
             
             _curWeather = type;

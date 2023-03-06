@@ -24,15 +24,13 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             {
                 Damage = damage,
                 SkillSource = entity,
-                SkillTarget = target
+                SkillTarget = target,
+                CurrentDamageDonePriority = template.DamageDonePriority
             }, targetEntity);
             if (!tempSkillResult.DamageShouldBeDone)
             {
-                return null;
-            }
-            if (!tempSkillResult.DamageShouldBeDone)
-            {
-                return null;
+                skillResult.ContinueProcedureFunction = false;
+                return input;
             }
             sourceEntity.Anchor.ShowEffectText(template.Name);
             await targetEntity.SetTargetHp(damage); 
@@ -50,7 +48,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
                 SkillTarget = target
             }, sourceEntity);
             EffectMgr.Instance.RenderLineFromTo(sourceEntity.Anchor.transform.position, targetEntity.Anchor.transform.position);
-            await UniTask.Delay(1000);
+            await UniTask.Delay(BattleMgr.Instance.AnimationAwaitTime);
             skillResult.Damage = damage;
             return input;
         };
@@ -93,7 +91,6 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
         public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryAddBuffForTest = async (input, entity, target, skillTemplate) =>
         {
             await BuffMgr.Instance.AddBuff(entity, target, 0);
-            Debug.Log("Buff Added");
             return input;
         };
         
@@ -109,11 +106,13 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             {
                 Damage = damage,
                 SkillSource = entity,
-                SkillTarget = target
+                SkillTarget = target,
+                CurrentDamageDonePriority = template.DamageDonePriority
             }, targetEntity);
             if (!tempSkillResult.DamageShouldBeDone)
             {
-                return null;
+                skillResult.ContinueProcedureFunction = false;
+                return input;
             }
             await targetEntity.SetTargetHp(-damage );
             await BuffMgr.Instance.ExecuteBuff(Constant.Constant.BuffEventKey.AfterDamage, new SkillResult()
@@ -138,19 +137,40 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var sourceEntity = (RuntimeHero)entity;
             var targetEntity = (RuntimeHero)target;
             var template = (SkillTemplate)skillTemplate;
-            
 
             for (int i = 0; i < template.AddBuffPossibility.Length; i++)
             {
                 if (!ProbTrigger(template.AddBuffPossibility[i]))
                 {
+                    skillResult.ContinueProcedureFunction = false;
                     continue;
                 }
 
                 foreach (var index in template.AddBuffIndex[i])
                 {
+                    var buffTemplate = ConfigManager.Instance.GetBuffTemplateByID(index);
+                    if (buffTemplate.OnlyOneBuffShouldExist && BuffMgr.Instance.ExistActiveBuff(target, buffTemplate))
+                    {
+                        return input;
+                    }
                     await BuffMgr.Instance.AddBuff(sourceEntity, targetEntity, index);
                 }
+            }
+
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> TryAddBuffInInputStealBuffList = async (input, entity, target, skillTemplate) =>
+        {
+            var skillResult = (SkillResult)input;
+            var sourceEntity = (RuntimeHero)entity;
+            var targetEntity = (RuntimeHero)target;
+            var template = (SkillTemplate)skillTemplate;
+            
+
+            foreach (var index in skillResult.StealBuffIDs)
+            {
+                await BuffMgr.Instance.AddBuff(sourceEntity, targetEntity, index);
             }
             
             return input;
@@ -168,8 +188,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 
             BpDebut bpDebut = new BpDebut(targetEntity);
 
+            var handler = EventMgr.Instance.ListenTo(CoreScripts.Constant.Constant.ListenToEvent.BattlePlayableReturnOwnerShip + skillResult.SelfPlayable.RuntimeID);
             BattleMgr.Instance.BorrowControlToPendingPlayable(skillResult.SelfPlayable, bpDebut);
-            var handler = EventMgr.Instance.ListenTo("BATTLE_PLAYABLE_RETURN_OWNER_SHIP_" + skillResult.SelfPlayable.GetHashCode());
+            
             await UniTask.WaitUntil(() => handler.Complete);
 
 
@@ -192,7 +213,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             
             skillResult.CallDefaultPlayableDestroyFunction = false;
             BattleMgr.Instance.TransferControlToPendingPlayable(playable);
-            
+
             return input;
         };
         
@@ -220,9 +241,50 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var targetEntity = (RuntimeHero)target;
             var template = (SkillTemplate)skillTemplate;
             
-            Debug.LogWarning(targetEntity.Template.Name);
-            var buff = await BuffMgr.Instance.GetOnePositiveBuffByTarget(targetEntity);
-            Debug.LogWarning(buff.Name);
+            EffectMgr.Instance.RenderLineFromTo(sourceEntity.Anchor.transform.position, targetEntity.Anchor.transform.position);
+            var buff = await BuffMgr.Instance.RemoveOnePositiveBuffByTarget(targetEntity);
+            if(buff != null)
+            {
+                skillResult.StealBuffIDs.Add(buff.ID);
+            }
+            
+            await UniTask.Delay(BattleMgr.Instance.AnimationAwaitTime);
+            
+            
+            
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> LoopSkillNTime = async (input, entity, target, skillTemplate) =>
+        {
+            var skillResult = (SkillResult)input;
+            var sourceEntity = (RuntimeHero)entity;
+            var targetEntity = (RuntimeHero)target;
+            var template = (SkillTemplate)skillTemplate;
+
+
+            SkillTemplate loopSkillTemplate = ConfigManager.Instance.GetSkillTemplateByID(template.LoopSkillID);
+            SkillResult prototype = new SkillResult();
+            if (template.LoopLoadPreLoadData)
+            {
+                prototype = await loopSkillTemplate.GetPreloadData(sourceEntity);
+            }
+            else
+            {
+                prototype.TargetHeroes.Add(targetEntity);
+            }
+            
+            for (int i = 0; i < template.LoopTime; i++)
+            {
+                SkillResult temp = prototype.Copy();
+                BpSkill bpSkill = new BpSkill(sourceEntity, loopSkillTemplate, temp);
+                
+                var handler = EventMgr.Instance.ListenTo(CoreScripts.Constant.Constant.ListenToEvent.BattlePlayableReturnOwnerShip + skillResult.SelfPlayable.RuntimeID);
+                BattleMgr.Instance.BorrowControlToPendingPlayable(skillResult.SelfPlayable, bpSkill);
+                await UniTask.WaitUntil(() => handler.Complete);
+            }
+            
+            
             
             return input;
         };

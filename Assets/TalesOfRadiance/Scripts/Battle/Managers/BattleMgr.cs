@@ -25,6 +25,8 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         public Camera UICamera;
         public Canvas CameraSpaceCanvas;
 
+        public int AnimationAwaitTime = 1000;
+
 
         public void Init(Camera uiCamera, Canvas cameraSpaceCanvas, params CharacterTeam[] teams)
         {
@@ -95,6 +97,11 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             CurBattleRound.AddBattlePlayables(new BpFaint(hero));
         }
 
+        public void AddBattleSkill(BpSkill skill)
+        {
+            CurBattleRound.AddBattlePlayables(skill);
+        }
+
         public void TransferControlToPendingPlayable(ABattlePlayable playable)
         {
             CurBattleRound.TransferControlToPendingPlayable(playable);
@@ -111,6 +118,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             hero.Anchor.gameObject.SetActive(false);
             CurBattleRound.RemoveRunTimeSkill(hero);
             await BuffMgr.Instance.RemoveAllBuffByTarget(hero);
+            await BuffMgr.Instance.RemoveAllAttributeBySource(hero);
         }
 
         public override async void StartFirstRound()

@@ -167,6 +167,7 @@ namespace Editor.BattleMonitor
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Buff", GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
+            EditorGUILayout.LabelField("To Delete", GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             EditorGUILayout.LabelField("Source", GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             EditorGUILayout.LabelField("Target", GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             EditorGUILayout.LabelField("Remain Round", GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));

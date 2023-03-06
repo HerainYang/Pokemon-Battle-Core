@@ -23,6 +23,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             float battleDefense = hero.Properties.Defence;
             return battleDefense;
         }
+
         
         private static bool ProbTrigger(float prob)
         {

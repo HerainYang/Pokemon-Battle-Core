@@ -40,6 +40,8 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             public const string AfterHeal = "AFTER_HEAL";
             public const string AfterApplyDamage = "AFTER_APPLY_DAMAGE";
             public const string BeforeFaint = "BEFORE_FAINT";
+            public const string AfterAddBuff = "AFTER_ADD_BUFF";
+            public const string BeforeExecuteBuff = "BEFORE_EXECUTE_BUFF";
         }
     }
 }

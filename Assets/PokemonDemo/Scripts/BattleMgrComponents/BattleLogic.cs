@@ -250,7 +250,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             var buffTemplate = PokemonMgr.Instance.GetBuffTemplateByID(buffId);
             if (ProbTrigger(template.SpecialEffectProb))
             {
-                if (BuffMgr.Instance.Exist(target, PokemonMgr.Instance.GetBuffTemplateByID(buffId)))
+                if (BuffMgr.Instance.ExistActiveBuff(target, PokemonMgr.Instance.GetBuffTemplateByID(buffId)))
                 {
                     await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " already get " + buffTemplate.Name);
                     return null;
@@ -267,7 +267,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
         private static async UniTask<PokemonBuffRecorder> MustAddBuff(Pokemon source, Pokemon target, CommonSkillTemplate template, int buffId)
         {
             var buffTemplate = PokemonMgr.Instance.GetBuffTemplateByID(buffId);
-            if (BuffMgr.Instance.Exist(target, PokemonMgr.Instance.GetBuffTemplateByID(buffId)))
+            if (BuffMgr.Instance.ExistActiveBuff(target, PokemonMgr.Instance.GetBuffTemplateByID(buffId)))
             {
                 await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(target.GetName() + " already get " + buffTemplate.Name);
                 return null;
@@ -445,7 +445,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
-                if (BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(1)))
+                if (BuffMgr.Instance.ExistActiveBuff(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(1)))
                 {
                     await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(pokemonTarget.GetName() + " already guard");
                     return null;
@@ -581,7 +581,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 var skillTemplate = (CommonSkillTemplate)template;
                 if (ProbTrigger(skillTemplate.SpecialEffectProb))
                 {
-                    if (BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(8)) || BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(9)))
+                    if (BuffMgr.Instance.ExistActiveBuff(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(8)) || BuffMgr.Instance.ExistActiveBuff(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(9)))
                     {
                         await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(pokemonTarget.GetName() + " already get paralysis!");
                         return null;
@@ -671,7 +671,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 }
 
                 BattleMgr.Instance.PlayerLogStore(pokemonSource.RuntimeID + "_ATTRIBUTE", pokemonSource.Attribute);
-                pokemonSource.Attribute.RemoveAttribute(pokemonSource);
+                await pokemonSource.Attribute.RemoveAttribute(pokemonSource);
                 pokemonSource.Attribute = pokemonTarget.Attribute;
                 await pokemonSource.Attribute.InitAttribute(pokemonSource);
 
@@ -728,8 +728,8 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             {
                 var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
-                BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(12));
-                BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(13));
+                await BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(12));
+                await BuffMgr.Instance.RemoveBuffByTarget(pokemonSource, PokemonMgr.Instance.GetBuffTemplateByID(13));
                 BattleMgr.Instance.BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(BattleMgr.Instance.GetPokemonOnstagePosition(pokemonSource)).SetPokemonImgActive(true);
 
                 await BattleMgr.Instance.SetCommandText(pokemonSource.Name + " appears!");
@@ -742,7 +742,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 var skillResult = (PokemonCommonResult)input;
                 var pokemonSource = (Pokemon)source;
                 var pokemonTarget = (Pokemon)target;
-                if (BuffMgr.Instance.Exist(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(14)))
+                if (BuffMgr.Instance.ExistActiveBuff(pokemonTarget,  PokemonMgr.Instance.GetBuffTemplateByID(14)))
                 {
                     await BattleMgr.Instance.BattleScenePanelTwoPlayerUI.SetCommandText(pokemonTarget.GetName() + " already get taunt");
                     return null;
@@ -1053,7 +1053,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 target.HpMax = info.HpMax;
                 await target.ChangeHp(0);
 
-                target.Attribute.RemoveAttribute(target);
+                await target.Attribute.RemoveAttribute(target);
                 target.Attribute = BattleMgr.Instance.PlayerLogGet<AttributesTemplate>(target.RuntimeID + "_ATTRIBUTE");
                 await target.Attribute.InitAttribute(target);
 

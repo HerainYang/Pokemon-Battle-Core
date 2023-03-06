@@ -20,13 +20,20 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public Types.SkillType SkillType;
 
         public float PercentageDamageRate;
-        public float[] AddBuffPossibility;
+        public Types.DamageDonePriority DamageDonePriority;
+
+        public int LoopTime;
+        public int LoopSkillID;
+        // if is true, it will use skill's preload function to load target and other data
+        // if is false, it will use the current target
+        public bool LoopLoadPreLoadData = true;
         public int NextSkillID;
 
         public int TargetCount = 1;
         
         //reason see BattleLogic.TryAddBuffInBuffList
         public int[][] AddBuffIndex;
+        public float[] AddBuffPossibility;
 
         public int[] PassiveSkillBuffList;
         
@@ -35,6 +42,8 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public Types.BuffType BuffType;
         public float ValueChangeRate;
         public bool RecoverHp;
+
+        public bool OnlyOneBuffShouldExist = false;
 
         public SkillTemplate(int skillID, string skillName, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null,  Func<List<Tuple<IBattleEntity, ASkillResult>>, ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onProcedureFunctionsEndCallBacks = null)
         {
@@ -46,12 +55,13 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             OnProcedureFunctionsEndCallBacks = onProcedureFunctionsEndCallBacks; 
         }
         
-        public SkillTemplate(int skillID, string skillName, int[] passiveSkillBuffList)
+        public SkillTemplate(int skillID, string skillName, int[] passiveSkillBuffList, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null)
         {
             ID = skillID;
             Name = skillName;
             SkillType = Types.SkillType.Passive;
             PassiveSkillBuffList = passiveSkillBuffList;
+            OnLoadRequest = onLoadRequest;
         }
         
         public SkillTemplate(int id, string name, int effectRound, Types.BuffType buffType, Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBacks, string buffTriggerEvent)
@@ -63,6 +73,11 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             Name = name;
             OnDestroyCallBacks = onDestroyCallBacks;
             BuffType = buffType;
+        }
+
+        public SkillTemplate()
+        {
+            
         }
 
         public async UniTask<ABattlePlayable> SendLoadSkillRequest(AtorBattleEntity sourceEntity, SkillResult input = null)
@@ -88,6 +103,31 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             }
 
             return new BpSkill(sourceEntity, this, input);
+        }
+
+        public async UniTask<SkillResult> GetPreloadData(AtorBattleEntity sourceEntity, SkillResult input = null)
+        {
+            if (input == null)
+                input = new SkillResult();
+            input.SkillID = ID;
+            if (OnLoadRequest == null)
+            {
+                input = (SkillResult)await BattleLogics.BattleLogic.SelectRandomEnemy(input, sourceEntity, this);
+                if(input == null)
+                    return null;
+            }
+            else
+            {
+                foreach (var func in OnLoadRequest)
+                {
+                    var result = await func(input, sourceEntity, this);
+                    if(result == null)
+                        return null;
+                    input = (SkillResult)result;
+                }
+            }
+
+            return input;
         }
     }
 }

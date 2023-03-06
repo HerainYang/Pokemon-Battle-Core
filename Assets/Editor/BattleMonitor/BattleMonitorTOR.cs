@@ -126,11 +126,12 @@ namespace Editor.BattleMonitor
             {
                 EditorGUILayout.LabelField("Attribute: " + buffRecorder.Template.Name, GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             }
-
             else
             {
                 EditorGUILayout.LabelField(buffRecorder.Template.Name, GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             }
+            
+            EditorGUILayout.LabelField(buffRecorder.DeletePending.ToString(), GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
 
             if (buffRecorder.Source != null)
             {

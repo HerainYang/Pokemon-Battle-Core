@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CoreScripts.BattleComponents;
 using CoreScripts.Managers;
 using Cysharp.Threading.Tasks;
@@ -66,7 +67,7 @@ namespace PokemonDemo.Scripts.Managers
         }
 
         // the follow two won't delete weather buff
-        public override void RemoveBuffByTarget(IBattleEntity target, ASkillTemplate template)
+        public override async UniTask RemoveBuffByTarget(IBattleEntity target, ASkillTemplate template)
         {
             Listeners.TryGetValue(template.BuffTriggerEvent, out var listener);
             if (listener == null)
@@ -74,10 +75,18 @@ namespace PokemonDemo.Scripts.Managers
                 return;
             }
 
-            listener.RemoveAll(r => ((PokemonBuffRecorder)r).Target != null && ((PokemonBuffRecorder)r).Template == template && ((PokemonBuffRecorder)r).Target.Equals(target) && !((PokemonBuffRecorder)r).IsWeather);
+            foreach (var recorder in listener.Where(r => !r.DeletePending && ((PokemonBuffRecorder)r).Target != null && ((PokemonBuffRecorder)r).Template == template && ((PokemonBuffRecorder)r).Target.Equals(target) && !((PokemonBuffRecorder)r).IsWeather))
+            {
+                if (recorder.Template.OnDestroyCallBacks != null)
+                {
+                    await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                }
+
+                recorder.DeletePending = true;
+            }
         }
 
-        public override void RemoveBuffBySource(IBattleEntity source, ASkillTemplate template)
+        public override async UniTask RemoveBuffBySource(IBattleEntity source, ASkillTemplate template)
         {
             Listeners.TryGetValue(template.BuffTriggerEvent, out var listener);
             if (listener == null)
@@ -85,16 +94,31 @@ namespace PokemonDemo.Scripts.Managers
                 return;
             }
 
-            int i = listener.RemoveAll(r => ((PokemonBuffRecorder)r).Source != null && ((PokemonBuffRecorder)r).Template == template && ((PokemonBuffRecorder)r).Source.Equals(source) && !((PokemonBuffRecorder)r).IsWeather);
-            Debug.Log("[BuffMgr] " + i + "buffs are removed by source");
+            foreach (var recorder in listener.Where(r => !r.DeletePending && ((PokemonBuffRecorder)r).Source != null && ((PokemonBuffRecorder)r).Template == template && ((PokemonBuffRecorder)r).Source.Equals(source) && !((PokemonBuffRecorder)r).IsWeather))
+            {
+                if (recorder.Template.OnDestroyCallBacks != null)
+                {
+                    await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                }
+
+                recorder.DeletePending = true;
+            }
         }
 
-        public void RemoveAllWeatherBuff()
+        public async UniTask RemoveAllWeatherBuff()
         {
             foreach (var pair in Listeners)
             {
                 var list = pair.Value;
-                list.RemoveAll(r => ((PokemonBuffRecorder)r).IsWeather);
+                foreach (var recorder in list.Where(r => !r.DeletePending && ((PokemonBuffRecorder)r).IsWeather))
+                {
+                    if (recorder.Template.OnDestroyCallBacks != null)
+                    {
+                        await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                    }
+
+                    recorder.DeletePending = true;
+                }
             }
         }
 

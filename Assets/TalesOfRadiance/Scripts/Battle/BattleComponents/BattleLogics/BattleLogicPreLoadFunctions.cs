@@ -52,6 +52,29 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 
             return input;
         };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectRandomTeammateExceptSelf = async (input, hero, template) =>
+        {
+            var runtimeHero = (AtorBattleEntity)hero;
+            var preLoadInput = (SkillResult)input;
+            var skillTemplate = (SkillTemplate)template;
+            
+            var selfTeam = GetSelfTeam(runtimeHero);
+            var potentialList = selfTeam.Heroes.FindAll(o => o.Properties.IsAlive);
+            potentialList.Remove((RuntimeHero)hero);
+            for (int i = 0; i < skillTemplate.TargetCount; i++)
+            {
+                if(potentialList.Count == 0)
+                    break;
+                int index = Random.Range(0, potentialList.Count);
+                preLoadInput.TargetHeroes.Add(potentialList[index]);
+                potentialList.RemoveAt(index);
+            }
+            
+            await UniTask.Yield();
+
+            return input;
+        };
 
         public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectAppendFront = async (input, hero, arg3) =>
         {
@@ -59,6 +82,12 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var preLoadInput = (SkillResult)input;
             
             var enemyTeam = GetEnemyTeam(runtimeHero);
+            
+            if (enemyTeam.GetHeroByIndex(0) != null && enemyTeam.GetHeroByIndex(3) != null && enemyTeam.GetHeroByIndex(6) != null)
+            {
+                return await SelectAppendMid(input, hero, arg3);
+            }
+            
             if (enemyTeam.GetHeroByIndex(0) != null)
             {
                 preLoadInput.TargetHeroes.Add(enemyTeam.GetHeroByIndex(0));
@@ -82,6 +111,12 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var preLoadInput = (SkillResult)input;
             
             var enemyTeam = GetEnemyTeam(runtimeHero);
+            
+            if (enemyTeam.GetHeroByIndex(1) != null && enemyTeam.GetHeroByIndex(4) != null && enemyTeam.GetHeroByIndex(7) != null)
+            {
+                return await SelectAppendBack(input, hero, arg3);
+            }
+            
             if (enemyTeam.GetHeroByIndex(1) != null)
             {
                 preLoadInput.TargetHeroes.Add(enemyTeam.GetHeroByIndex(1));
@@ -134,12 +169,28 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             return input;
         };
 
-        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectAllTeammate = async (input, hero, arg3) =>
+        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectAllTeammate = async (input, hero, template) =>
         {
             var runtimeHero = (AtorBattleEntity)hero;
             var preLoadInput = (SkillResult)input;
 
             var selfTeam = GetSelfTeam(runtimeHero);
+            foreach (var teammate in selfTeam.Heroes)
+            {
+                preLoadInput.TargetHeroes.Add(teammate);
+            }
+            
+            await UniTask.Yield();
+
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectAllEnemy = async (input, hero, template) =>
+        {
+            var runtimeHero = (AtorBattleEntity)hero;
+            var preLoadInput = (SkillResult)input;
+
+            var selfTeam = GetEnemyTeam(runtimeHero);
             foreach (var teammate in selfTeam.Heroes)
             {
                 preLoadInput.TargetHeroes.Add(teammate);

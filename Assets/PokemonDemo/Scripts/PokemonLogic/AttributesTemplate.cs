@@ -24,11 +24,11 @@ namespace PokemonDemo.Scripts.PokemonLogic
             }
         }
 
-        public void RemoveAttribute(Pokemon self)
+        public async UniTask RemoveAttribute(Pokemon self)
         {
             foreach (int buffKey in _attributeBuffKeyList)
             {
-                BuffMgr.Instance.RemoveBuffBySource(self, PokemonMgr.Instance.GetBuffTemplateByID(buffKey));
+                await BuffMgr.Instance.RemoveBuffBySource(self, PokemonMgr.Instance.GetBuffTemplateByID(buffKey));
             }
         }
     }

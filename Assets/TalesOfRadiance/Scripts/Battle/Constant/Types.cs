@@ -30,5 +30,12 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             Passive,
             Active
         }
+
+        public enum DamageDonePriority
+        {
+            Default,
+            DawnProtect,
+            BurntLotus
+        }
     }
 }

@@ -163,6 +163,8 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SpecialDamageAvoid = 0f,
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0.003f,
+                
+                SkillIndices = new []{12, 14}
             });
             _heroTemplates.Add(3, new HeroTemplate(3, "麒麟", "TORC_ch065")
             {
@@ -214,7 +216,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 SustainDamageIncrease = 0f,
                 SustainDamageAvoid = 0.093f,
                 
-                SkillIndices = new []{5, 7}
+                SkillIndices = new []{5, 7, 9, 11}
             });
         }
 
@@ -238,28 +240,58 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             {
                 PercentageDamageRate = 0.15f,
             });
-            _buffTemplates.Add(5, new SkillTemplate(5, "烧伤", 2, Types.BuffType.Negative, BattleLogic.Burnt, null, Constant.Constant.BuffEventKey.AfterRound)
+            _buffTemplates.Add(5, new SkillTemplate(5, "烧伤", 2, Types.BuffType.Negative, BattleLogic.Burnt, BattleLogic.ForBuffCancelTest, Constant.Constant.BuffEventKey.AfterRound)
             {
                 PercentageDamageRate = 0.2f,
             });
             _buffTemplates.Add(6, new SkillTemplate(6, "烈焰审判", 2, Types.BuffType.Negative, BattleLogic.FireJudgement, null, Constant.Constant.BuffEventKey.AfterApplyDamage)
             {
                 PercentageDamageRate = 0.2f,
+                OnlyOneBuffShouldExist = true
             });
-            _buffTemplates.Add(7, new SkillTemplate(7, "破晓守护前置", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.DawnProtectPrefix, BattleLogic.UndoDawnProtect, Constant.Constant.BuffEventKey.BeforeRound)
+            _buffTemplates.Add(7, new SkillTemplate(7, "破晓守护I", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.DawnProtectPrefix, BattleLogic.UndoDawnProtect, Constant.Constant.BuffEventKey.BeforeRound)
             {
                 TargetCount = 1
             });
             
             _buffTemplates.Add(8, new SkillTemplate(8, "破晓守护", 1, Types.BuffType.Positive, BattleLogic.DawnProtect, null, Constant.Constant.BuffEventKey.BeforeDamage)
             {
-                PercentageDamageRate = 0.75f
+                PercentageDamageRate = 0.75f,
+                OnlyOneBuffShouldExist = true
             });
             
             _buffTemplates.Add(9, new SkillTemplate(9, "永生幻境", 2, Types.BuffType.Positive, BattleLogic.Immortal, BattleLogic.UndoImmortal, Constant.Constant.BuffEventKey.BeforeFaint)
             {
-                PercentageDamageRate = 0.75f
+                PercentageDamageRate = 0.75f,
+                OnlyOneBuffShouldExist = true
             });
+            
+            _buffTemplates.Add(10, new SkillTemplate(10, "始母之血", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.DamageToTeamHeal, null, Constant.Constant.BuffEventKey.AfterApplyDamage)
+            {
+                PercentageDamageRate = 0.15f
+            });
+            
+            _buffTemplates.Add(11, new SkillTemplate(11, "IncreaseAttack", 2, Types.BuffType.Positive, BattleLogic.ChangeAttack, BattleLogic.UndoChangeAttack, Constant.Constant.BuffEventKey.AfterAddBuff)
+            {
+                ValueChangeRate = 0.25f
+            });
+            
+            _buffTemplates.Add(12, new SkillTemplate(12, "IncreaseAttackOnDebut", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.ChangeAttack, BattleLogic.UndoChangeAttack, Constant.Constant.BuffEventKey.AfterDebut)
+            {
+                ValueChangeRate = 0.4f
+            });
+            
+            _buffTemplates.Add(13, new SkillTemplate(13, "IncreaseAttack", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.ChangeHpMax, BattleLogic.UndoChangeHpMax, Constant.Constant.BuffEventKey.AfterDebut)
+            {
+                ValueChangeRate = 0.2f
+            });
+            
+            _buffTemplates.Add(14, new SkillTemplate(14, "焚天火莲BuffI", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.BurntLotus1, null, Constant.Constant.BuffEventKey.BeforeExecuteBuff)
+            {
+                ValueChangeRate = 0.15f
+            });
+            
+            _buffTemplates.Add(15, new SkillTemplate(15, "焚天火莲BuffII", Int32.MaxValue, Types.BuffType.Positive, BattleLogic.BurntLotus2, null, Constant.Constant.BuffEventKey.AfterRound));
         }
 
         private void InitSkill()
@@ -285,15 +317,29 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 Cd = 4
             });
             
-            _skillTemplates.Add(3, new SkillTemplate(3, "不屈守护神", new []{1, 2, 3}));
+            _skillTemplates.Add(3, new SkillTemplate(3, "不屈守护神", new []{1, 2, 3}, new []{BattleLogic.SelectSelf}));
             
-            _skillTemplates.Add(4, new SkillTemplate(4, "破晓守护", new []{7}));
+            _skillTemplates.Add(4, new SkillTemplate(4, "破晓守护", new []{7}, new []{BattleLogic.SelectSelf}));
             
-            _skillTemplates.Add(5, new SkillTemplate(5, "炼石补天", new [] {BattleLogic.StealOneBuff}, new []{BattleLogic.SelectRandomEnemy})
+            _skillTemplates.Add(5, new SkillTemplate(5, "炼石补天I", new [] {BattleLogic.StealOneBuff, BattleLogic.NormalAttack}, new []{BattleLogic.SelectRandomEnemy}, new []{ BattleLogic.MergeStealBuffIDs, BattleLogic.CallBackExecuteNextSkillPlayableWithInput})
             {
                 InitCd = 1,
                 Cd = 2,
-                TargetCount = 3
+                TargetCount = 3,
+                NextSkillID = 6,
+                DamageIncreaseRate = 1.05f
+            });
+            
+            _skillTemplates.Add(6, new SkillTemplate(6, "炼石补天II", new [] {BattleLogic.TryAddBuffInInputStealBuffList}, new []{BattleLogic.SelectRandomTeammateExceptSelf}, new []{BattleLogic.CallBackExecuteNextSkillPlayableWithInput})
+            {
+                NextSkillID = 10
+            });
+            
+            _skillTemplates.Add(10, new SkillTemplate(6, "炼石补天III", new [] {BattleLogic.TryAddBuffInBuffList}, new []{BattleLogic.SelectRandomTeammateExceptSelf})
+            {
+                AddBuffPossibility = new []{1f},
+                AddBuffIndex = new []{ new []{11}},
+                TargetCount = 4
             });
             
             _skillTemplates.Add(7, new SkillTemplate(7, "抟土造人I", new [] {BattleLogic.TryBringBackToLife, BattleLogic.ExecuteNextSkillPlayable}, new []{BattleLogic.SelectOneFaintTeammate})
@@ -309,6 +355,37 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 AddBuffIndex = new []{ new []{9}},
                 TargetCount = 2,
                 DamageIncreaseRate = 1.5f
+            });
+            
+            _skillTemplates.Add(9, new SkillTemplate(9, "始母之血", new []{10}));
+            
+            _skillTemplates.Add(11, new SkillTemplate(11, "创世女神", new []{12, 13}, new []{BattleLogic.SelectSelf}));
+            
+            _skillTemplates.Add(12, new SkillTemplate(12, "弑魂神枪", new [] {BattleLogic.LoopSkillNTime}, new []{BattleLogic.SelectAppendFront})
+            {
+                DamageIncreaseRate = 2.31f,
+                LoopTime = 5,
+                LoopSkillID = 13,
+                LoopLoadPreLoadData = false,
+                InitCd = 1,
+                Cd = 10
+            });
+            
+            _skillTemplates.Add(13, new SkillTemplate(13, "弑魂神枪I", new [] {BattleLogic.NormalAttack, BattleLogic.TryAddBuffInBuffList}, null)
+            {
+                DamageIncreaseRate = 2.31f,
+                AddBuffPossibility = new []{0.5f},
+                AddBuffIndex = new []{ new []{5}},
+            });
+            
+            _skillTemplates.Add(14, new SkillTemplate(14, "焚天火莲", new []{14, 15}));
+            
+            _skillTemplates.Add(15, new SkillTemplate(15, "焚天火莲", new [] {BattleLogic.NormalAttack, BattleLogic.TryAddBuffInBuffList}, null)
+            {
+                DamageIncreaseRate = 0.8f,
+                AddBuffPossibility = new []{1f},
+                AddBuffIndex = new []{ new []{5}},
+                DamageDonePriority = Types.DamageDonePriority.BurntLotus
             });
         }
 

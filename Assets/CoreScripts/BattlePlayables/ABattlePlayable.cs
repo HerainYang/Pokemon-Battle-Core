@@ -1,5 +1,5 @@
+using System;
 using CoreScripts.BattleComponents;
-using TalesOfRadiance.Scripts.Battle.BattleComponents;
 
 namespace CoreScripts.BattlePlayables
 {
@@ -13,6 +13,8 @@ namespace CoreScripts.BattlePlayables
         
         public abstract void Execute();
         protected abstract void OnDestroy();
+
+        public readonly Guid RuntimeID = Guid.NewGuid();
 
         protected ABattlePlayable(int priority)
         {

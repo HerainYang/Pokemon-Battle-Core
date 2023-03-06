@@ -110,6 +110,8 @@ namespace Editor.BattleMonitor
             {
                 EditorGUILayout.LabelField(pokemonBuffRecorder.Template.Name, GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
             }
+            
+            EditorGUILayout.LabelField(pokemonBuffRecorder.DeletePending.ToString(), GUILayout.MinWidth(ItemMinWidth), GUILayout.MaxWidth(ItemMinWidth * 5), GUILayout.Height(ItemHeight));
 
             if (pokemonBuffRecorder.Source != null)
             {

@@ -21,7 +21,7 @@ namespace CoreScripts.BattlePlayables
     {
         private List<ABattlePlayable> _battlePlayables;
         private List<ABattlePlayable> _remainingPlayables;
-        private Stack<ABattlePlayable> _ownershipWaitingList;
+        private readonly Stack<ABattlePlayable> _ownershipWaitingList;
         public Types.BattleRoundStatus Status;
         private readonly int _roundCount;
         private readonly ABattleMgr _battleMgr;
@@ -85,11 +85,9 @@ namespace CoreScripts.BattlePlayables
         // to run stage one by one, just call this function when you need to process
         public void ExecuteBattleStage()
         {
-            Debug.Log("Remaining round: " + _remainingPlayables.Count);
             if (_ownershipWaitingList.Count != 0)
             {
-                
-                EventMgr.Instance.Dispatch("BATTLE_PLAYABLE_RETURN_OWNER_SHIP_" + _ownershipWaitingList.Peek().GetHashCode());
+                EventMgr.Instance.Dispatch(Constant.Constant.ListenToEvent.BattlePlayableReturnOwnerShip + _ownershipWaitingList.Peek().RuntimeID);
                 _ownershipWaitingList.Pop();
                 return;
             }
@@ -155,26 +153,6 @@ namespace CoreScripts.BattlePlayables
                 if (_remainingPlayables[i].Source.Equals(source))
                 {
                     _remainingPlayables.RemoveAt(i);
-                }
-            }
-        }
-
-        // this will be call when a pokemon dead, this is a design failure
-        public void RemoveRunTimeSkillPlayablesPokemonDemo(Pokemon source)
-        {
-            if (_remainingPlayables.Count == 0)
-            {
-                return;
-            }
-
-            for (int i = _remainingPlayables.Count - 1; i >= 0; i--)
-            {
-                if (_remainingPlayables[i] is RunTimeSkillBase)
-                {
-                    if (((RunTimeSkillBase)_remainingPlayables[i]).PokemonSource.Equals(source))
-                    {
-                        _remainingPlayables.RemoveAt(i);
-                    }
                 }
             }
         }

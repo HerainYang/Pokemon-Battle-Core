@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CoreScripts.BattleComponents;
 using CoreScripts.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
+using TalesOfRadiance.Scripts.Battle.Constant;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents
 {
@@ -9,12 +10,15 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
     {
         public int Damage;
         public bool DamageShouldBeDone = true;
+        public Types.DamageDonePriority CurrentDamageDonePriority = Types.DamageDonePriority.Default;
         public IBattleEntity SkillSource;
         public IBattleEntity SkillTarget;
         public ABattlePlayable SelfPlayable;
         public bool CallDefaultPlayableDestroyFunction = true;
         public bool HeroShouldFaint = true;
         public bool ContinueProcedureFunction = true;
+
+        public List<int> StealBuffIDs = new List<int>();
 
         public List<RuntimeHero> TargetHeroes = new List<RuntimeHero>();
 
@@ -32,6 +36,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
                 ContinueProcedureFunction = ContinueProcedureFunction,
                 TargetHeroes = TargetHeroes
             };
+            output.StealBuffIDs = new List<int>(StealBuffIDs);
             return output;
         }
     }

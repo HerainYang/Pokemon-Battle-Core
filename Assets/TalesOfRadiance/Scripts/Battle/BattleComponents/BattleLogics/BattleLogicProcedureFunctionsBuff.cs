@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using CoreScripts.BattleComponents;
 using Cysharp.Threading.Tasks;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
+using TalesOfRadiance.Scripts.Battle.BattlePlayables;
 using TalesOfRadiance.Scripts.Battle.Managers;
 using UnityEngine;
 using UnityEngine.Windows;
+using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 {
@@ -18,6 +21,14 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffRecorder = (BuffRecorder)recorder;
             await UniTask.Yield();
             return input;
+        };
+        
+        public static readonly Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> ForBuffCancelTest = async (source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var buffRecorder = (BuffRecorder)recorder;
+            await UniTask.Yield();
         };
 
         public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ChangeHpMax = async (input, source, target, recorder) =>
@@ -69,6 +80,27 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             buffTarget.Properties.Defence = (int)(buffTarget.Template.Defence / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
             await UniTask.Yield();
         };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ChangeAttack = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.Attack += (int)(buffTarget.Template.Defence * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
+
+            await UniTask.Yield();
+            return input;
+        };
+
+        public static readonly Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> UndoChangeAttack = async (source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.Attack = (int)(buffTarget.Template.Defence / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
+            await UniTask.Yield();
+        };
 
         public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> IncreaseDamageAvoidWhenHpDecrease = async (input, source, target, recorder) =>
         {
@@ -114,7 +146,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var skillResult = (SkillResult)input;
             var buffRecorder = (BuffRecorder)recorder;
 
-            int damage = (int)(buffSource.Properties.Attack * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate);
+            int damage = (int)(buffSource.Properties.Attack * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate) + skillResult.Damage;
             await buffTarget.SetTargetHp(-damage);
             buffTarget.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.red);
             return input;
@@ -126,7 +158,6 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffTarget = (RuntimeHero)target;
             var skillResult = (SkillResult)input;
             var buffRecorder = (BuffRecorder)recorder;
-
 
             int damage = (int)(skillResult.Damage * 0.5f);
             await buffTarget.SetTargetHp(damage);
@@ -161,7 +192,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffTarget = (RuntimeHero)target;
             var buffRecorder = (BuffRecorder)recorder;
             // All protect effect withdraw
-            BuffMgr.Instance.RemoveBuffBySource(buffSource, ConfigManager.Instance.GetBuffTemplateByID(8));
+            await BuffMgr.Instance.RemoveBuffBySource(buffSource, ConfigManager.Instance.GetBuffTemplateByID(8));
             await UniTask.Yield();
         };
         
@@ -172,6 +203,13 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var skillResult = (SkillResult)input;
             var buffRecorder = (BuffRecorder)recorder;
 
+
+            if (skillResult.CurrentDamageDonePriority > Types.DamageDonePriority.DawnProtect)
+            {
+                return input;
+            }
+
+            skillResult.CurrentDamageDonePriority = Types.DamageDonePriority.DawnProtect;
             skillResult.DamageShouldBeDone = false;
             await buffSource.SetTargetHp((int)(skillResult.Damage * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate));
             EffectMgr.Instance.RenderLineFromTo(((RuntimeHero)skillResult.SkillSource).Anchor.transform.position, buffSource.Anchor.transform.position);
@@ -207,6 +245,100 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
                 BattleMgr.Instance.AddBattleFaint(buffTarget);
             }
             await UniTask.Yield();
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> DamageToTeamHeal = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+            
+            if(((RuntimeHero)skillResult.SkillSource).Team == buffSource.Team)
+            {
+                SkillResult teammates = (SkillResult)await SelectAllTeammate(new SkillResult(), buffSource, null);
+                foreach (var teammate in teammates.TargetHeroes)
+                {
+                    teammate.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.green);
+                    await teammate.SetTargetHp((int)(-skillResult.Damage * ((SkillTemplate)recorder.Template).PercentageDamageRate));
+                }
+            }
+
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> BurntLotus1 = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            if (buffRecorder.Target == null)
+                return input;
+            
+            if (((RuntimeHero)buffRecorder.Target).Team == buffSource.Team)
+            {
+                if (buffRecorder.Template.ID == 5)
+                {
+                    skillResult.Damage += (int) (buffSource.Properties.Attack * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
+                }
+            }
+
+            await UniTask.Yield();
+
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> BurntLotus2 = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            var enemyTeam = GetEnemyTeam(buffSource);
+
+            int highestBuffCount = 0;
+
+            foreach (var hero in enemyTeam.Heroes)
+            {
+                if (hero.Properties.IsAlive)
+                {
+                    int tempCount = 0;
+
+                    tempCount += BuffMgr.Instance.GetBuffListByTargetAndBuffID(hero, 5).Count;
+
+                    if (tempCount > highestBuffCount)
+                    {
+                        highestBuffCount = tempCount;
+                    }
+                }
+            }
+
+            ASkillResult targets;
+
+            if (highestBuffCount < 3)
+            {
+                return input;
+            }
+            
+            if (highestBuffCount < 6)
+            {
+                targets = await SelectRandomEnemy(new SkillResult(), source, new SkillTemplate(){TargetCount = 3});
+            } else if (highestBuffCount < 9)
+            {
+                targets = await SelectRandomEnemy(new SkillResult(), source, new SkillTemplate(){TargetCount = 4});
+            }
+            else
+            {
+                targets = await SelectAllEnemy(new SkillResult(), source, new SkillTemplate());
+            }
+
+            var newSkill = new BpSkill(buffSource, ConfigManager.Instance.GetSkillTemplateByID(15), (SkillResult)targets);
+            BattleMgr.Instance.AddBattleSkill(newSkill);
+
+            return input;
         };
     }
 }
