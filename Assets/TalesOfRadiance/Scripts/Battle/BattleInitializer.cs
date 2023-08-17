@@ -22,5 +22,6 @@ namespace TalesOfRadiance.Scripts.Battle
             enemyTeam.playerInfo = enemy;
             BattleMgr.Instance.Init(uiCamera, cameraSpaceCanvas, playerTeam, enemyTeam);
         }
+
     }
 }

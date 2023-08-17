@@ -9,7 +9,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
     public class SkillResult : ASkillResult
     {
         public int Damage;
+        public SkillTemplate SkillTemplate;
         public bool DamageShouldBeDone = true;
+        public bool HealShouldBeDone = true;
         public Types.DamageDonePriority CurrentDamageDonePriority = Types.DamageDonePriority.Default;
         public IBattleEntity SkillSource;
         public IBattleEntity SkillTarget;
@@ -17,6 +19,8 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public bool CallDefaultPlayableDestroyFunction = true;
         public bool HeroShouldFaint = true;
         public bool ContinueProcedureFunction = true;
+
+        public bool TemporaryChangeProperty = false;
 
         public List<int> StealBuffIDs = new List<int>();
 

@@ -19,9 +19,9 @@ namespace CoreScripts.BattlePlayables
 {
     public class BattleRound
     {
-        private List<ABattlePlayable> _battlePlayables;
-        private List<ABattlePlayable> _remainingPlayables;
-        private readonly Stack<ABattlePlayable> _ownershipWaitingList;
+        private List<ABattlePlayable> _battlePlayables;//stores playables that had been executed & in progress
+        private List<ABattlePlayable> _remainingPlayables;// stores playables that waiting to be executed
+        private readonly Stack<ABattlePlayable> _ownershipWaitingList;// playables that handed out ownership and waiting for the result
         public Types.BattleRoundStatus Status;
         private readonly int _roundCount;
         private readonly ABattleMgr _battleMgr;
@@ -188,6 +188,11 @@ namespace CoreScripts.BattlePlayables
                     playable.Priority = ((RunTimeSkillBase)playable).PokemonSource.Speed;
                 }
             }
+        }
+
+        public int GetRemainingPlayableCount()
+        {
+            return _remainingPlayables.Count;
         }
     }
 }

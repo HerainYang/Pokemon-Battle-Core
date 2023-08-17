@@ -12,5 +12,7 @@ namespace CoreScripts.BattleComponents
         public ASkillTemplate Template;
 
         public bool DeletePending = false;
+
+        public int BuffLayerCount = 1;
     }
 }

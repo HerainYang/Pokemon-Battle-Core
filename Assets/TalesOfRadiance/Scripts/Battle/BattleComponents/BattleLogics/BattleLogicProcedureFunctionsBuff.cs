@@ -87,7 +87,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffTarget = (RuntimeHero)target;
             var skillResult = (SkillResult)input;
             var buffRecorder = (BuffRecorder)recorder;
-            buffTarget.Properties.Attack += (int)(buffTarget.Template.Defence * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
+            buffTarget.Properties.Attack += (int)(buffTarget.Template.Attack * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
 
             await UniTask.Yield();
             return input;
@@ -98,7 +98,49 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffSource = (RuntimeHero)source;
             var buffTarget = (RuntimeHero)target;
             var buffRecorder = (BuffRecorder)recorder;
-            buffTarget.Properties.Attack = (int)(buffTarget.Template.Defence / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
+            buffTarget.Properties.Attack = (int)(buffTarget.Template.Attack / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
+            await UniTask.Yield();
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ChangeDamageAvoid = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.DamageAvoid += (int)(buffTarget.Template.DamageAvoid * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
+
+            await UniTask.Yield();
+            return input;
+        };
+
+        public static readonly Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> UndoChangeDamageAvoid = async (source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.DamageAvoid = (int)(buffTarget.Template.DamageAvoid / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
+            await UniTask.Yield();
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> ChangeCriticalRate = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.CriticalRate += (int)(buffTarget.Template.CriticalRate * ((SkillTemplate)buffRecorder.Template).ValueChangeRate);
+
+            await UniTask.Yield();
+            return input;
+        };
+
+        public static readonly Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> UndoChangeCriticalRate = async (source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var buffRecorder = (BuffRecorder)recorder;
+            buffTarget.Properties.CriticalRate = (int)(buffTarget.Template.CriticalRate / (1f + ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
             await UniTask.Yield();
         };
 
@@ -134,7 +176,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var skillResult = (SkillResult)input;
             var buffRecorder = (BuffRecorder)recorder;
             int healHp = (int)(buffTarget.Properties.MaxHealth * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate);
-            await buffTarget.SetTargetHp(healHp);
+            await TrySetTargetHpPassive(source, target, (SkillTemplate)recorder.Template, healHp, false);
             buffTarget.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.green);
             return input;
         };
@@ -147,7 +189,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffRecorder = (BuffRecorder)recorder;
 
             int damage = (int)(buffSource.Properties.Attack * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate) + skillResult.Damage;
-            await buffTarget.SetTargetHp(-damage);
+            await TrySetTargetHpPassive(source, target, (SkillTemplate)recorder.Template, -damage);
             buffTarget.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.red);
             return input;
         };
@@ -160,7 +202,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffRecorder = (BuffRecorder)recorder;
 
             int damage = (int)(skillResult.Damage * 0.5f);
-            await buffTarget.SetTargetHp(damage);
+            await TrySetTargetHpPassive(source, target, (SkillTemplate)recorder.Template, damage);
             buffTarget.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.red);
             
             return input;
@@ -204,14 +246,21 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             var buffRecorder = (BuffRecorder)recorder;
 
 
+            if (skillResult.SkillTemplate.SkillType != Types.SkillType.Active)
+            {
+                return input;
+            }
+            
             if (skillResult.CurrentDamageDonePriority > Types.DamageDonePriority.DawnProtect)
             {
                 return input;
             }
+            
+            
 
             skillResult.CurrentDamageDonePriority = Types.DamageDonePriority.DawnProtect;
             skillResult.DamageShouldBeDone = false;
-            await buffSource.SetTargetHp((int)(skillResult.Damage * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate));
+            await TrySetTargetHpPassive(skillResult.SkillSource, source, (SkillTemplate)recorder.Template, (int)(skillResult.Damage * ((SkillTemplate)buffRecorder.Template).PercentageDamageRate));
             EffectMgr.Instance.RenderLineFromTo(((RuntimeHero)skillResult.SkillSource).Anchor.transform.position, buffSource.Anchor.transform.position);
             buffSource.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.green);
             ((RuntimeHero)skillResult.SkillTarget).Anchor.ShowEffectText(buffRecorder.Template.Name, Color.green);
@@ -241,7 +290,6 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             // All protect effect withdraw
             if (buffTarget.Properties.Hp <= 0)
             {
-                Debug.LogWarning("Add one " + buffTarget.Properties.Hp);
                 BattleMgr.Instance.AddBattleFaint(buffTarget);
             }
             await UniTask.Yield();
@@ -260,7 +308,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
                 foreach (var teammate in teammates.TargetHeroes)
                 {
                     teammate.Anchor.ShowEffectText(buffRecorder.Template.Name, Color.green);
-                    await teammate.SetTargetHp((int)(-skillResult.Damage * ((SkillTemplate)recorder.Template).PercentageDamageRate));
+                    await TrySetTargetHpPassive(source, teammate, (SkillTemplate)recorder.Template, (int)(-skillResult.Damage * ((SkillTemplate)recorder.Template).PercentageDamageRate), false);
                 }
             }
 
@@ -308,6 +356,7 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
                     int tempCount = 0;
 
                     tempCount += BuffMgr.Instance.GetBuffListByTargetAndBuffID(hero, 5).Count;
+                    tempCount += BuffMgr.Instance.GetBuffListByTargetAndBuffID(hero, 15).Count;
 
                     if (tempCount > highestBuffCount)
                     {
@@ -340,5 +389,153 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
 
             return input;
         };
+
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> AccumulateDamageAddBuffInList = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            buffRecorder.AccumulateDamage += Math.Abs(skillResult.Damage);
+            int loopTime = (int)(buffRecorder.AccumulateDamage / (buffTarget.Properties.MaxHealth * ((SkillTemplate)buffRecorder.Template).ValueChangeRate)); 
+            for (int i = 0; i < loopTime; i++)
+            {
+                foreach (var indices in ((SkillTemplate)buffRecorder.Template).AddBuffIndex)
+                {
+                    foreach (var index in indices)
+                    {
+                        await TryAddBuff(buffSource, buffSource, index);
+                    }
+                }
+            }
+
+            if (loopTime != 0)
+            {
+                buffRecorder.AccumulateDamage = (int)(buffRecorder.AccumulateDamage % (buffTarget.Properties.MaxHealth * ((SkillTemplate)buffRecorder.Template).ValueChangeRate));
+            }
+            
+
+            await UniTask.Yield();
+            return input;
+        };
+        
+        public static readonly Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> RemoveAllBuffInList = async (source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var buffRecorder = (BuffRecorder)recorder;
+            foreach (var indices in ((SkillTemplate)buffRecorder.Template).AddBuffIndex)
+            {
+                foreach (var index in indices)
+                {
+                    await BuffMgr.Instance.RemoveBuffByTarget(buffTarget, ConfigManager.Instance.GetBuffTemplateByID(index));
+                }
+            }
+            
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> CheckHeartLotusNumber = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            var buffList = BuffMgr.Instance.GetBuffListByTargetAndBuffID(buffSource, 19);
+            if (buffList.Count != 9) 
+                return input;
+            await BuffMgr.Instance.RemoveBuffByTarget(buffSource, ConfigManager.Instance.GetBuffTemplateByID(19));
+            await TryAddBuff(buffSource, buffSource, 17);
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> NormalBecomeGod = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            if (((RuntimeHero)skillResult.SkillTarget).Team != buffSource.Team)
+            {
+                return input;
+            }
+
+            if (skillResult.SkillTemplate.SkillType != Types.SkillType.Buff && (skillResult.SkillTemplate.ID != 5 || skillResult.SkillTemplate.ID != 15))
+            {
+                return input;
+            }
+
+            skillResult.Damage = (int)((1 - ((SkillTemplate)buffRecorder.Template).ValueChangeRate) * skillResult.Damage);
+
+            if (Equals((RuntimeHero)skillResult.SkillTarget, buffSource))
+            {
+                if (ProbTrigger(0.5f))
+                {
+                    await TryAddBuff(buffSource, buffSource, 19);
+                }
+            }
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> EverythingUpdatePrefix = async (input, source, target, recorder) =>
+        {
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            if (!BuffMgr.Instance.ExistActiveBuff(buffSource, ConfigManager.Instance.GetBuffTemplateByID(25)))
+            {
+                return input;
+            }
+
+            skillResult.Damage = (int)(skillResult.Damage * buffSource.Properties.CriticalDamage);
+
+            await UniTask.Yield();
+            
+            return input;
+        };
+
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> EverythingUpdatePostFix = async (input, source, target, recorder) =>{
+            
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            if (BuffMgr.Instance.ExistActiveBuff(target, ConfigManager.Instance.GetBuffTemplateByID(25)) && ProbTrigger(0.35f))
+            {
+                Debug.LogWarning("Continue Attack Effect");
+                var damage = ApplyNormalDamage(buffTarget.Properties.Attack * 0.6f, (RuntimeHero)skillResult.SkillTarget).Damage;
+                await TrySetTargetHpPassive(target, skillResult.SkillTarget, (SkillTemplate)recorder.Template, damage);
+            }
+
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> FeatherProtect = async (input, source, target, recorder) =>{
+            
+            var buffSource = (RuntimeHero)source;
+            var buffTarget = (RuntimeHero)target;
+            var skillResult = (SkillResult)input;
+            var buffRecorder = (BuffRecorder)recorder;
+
+            if (skillResult.Damage > buffTarget.Properties.MaxHealth * 0.15)
+            {
+                buffRecorder.BuffLayerCount -= 1;
+                skillResult.Damage = (int)(skillResult.Damage * 0.65);
+                await TrySetTargetHpPassive(target, target, (SkillTemplate)buffRecorder.Template, (int)(buffTarget.Properties.MaxHealth * 0.1), false);
+            }
+
+            if (buffRecorder.BuffLayerCount == 0)
+            {
+                await BuffMgr.Instance.RemoveBuffByTarget(target, buffRecorder.Template);
+            }
+
+            return input;
+        };
+
     }
 }

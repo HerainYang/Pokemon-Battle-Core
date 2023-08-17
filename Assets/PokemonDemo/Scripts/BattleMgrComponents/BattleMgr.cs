@@ -253,7 +253,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
                 UpdatedRoundCount = RoundCount;
             }
 
-            if (CurBattleRound.GetRemainingPlayables().Count != 0)
+            if (CurBattleRound.GetRemainingPlayableCount() != 0)
             {
                 CurBattleRound.ExecuteBattleStage();
             }
@@ -279,13 +279,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
             if (CurBattleRound.Status == Types.BattleRoundStatus.Running)
                 CurBattleRound.ExecuteBattleStage();
         }
-        
-        public void RemoveSkillPlayablesBySource(Pokemon pokemon)
-        {
-            // CurBattleRound.RemoveRunTimeSkillPlayablesPokemonDemo(pokemon);
-            CurBattleRound.RemoveRunTimeSkill(pokemon);
-        }
-        
+
         public int CancelSkill(Pokemon source, int skillId)
         {
             return CurBattleRound.CancelSkillByPSourcePokemonAndSkillId(source, skillId);
@@ -390,7 +384,7 @@ namespace PokemonDemo.Scripts.BattleMgrComponents
         {
             Pokemon pokemon = OnStagePokemon[pokemonStageIndex];
             await BuffMgr.Instance.ExecuteBuff(Constant.BuffExecutionTimeKey.BeforeWithdraw, new PokemonCommonResult(), pokemon);
-            RemoveSkillPlayablesBySource(pokemon);
+            RemoveRunTimeSkillBySource(pokemon);
             await BuffMgr.Instance.RemoveAllBuffByTarget(pokemon);
             pokemon.OnStage = false;
             BattleScenePanelTwoPlayerUI.GetPokemonBattleInfo(pokemonStageIndex).UnSetPokemonInfo();

@@ -8,7 +8,6 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             HeartBeat,
             ForceAddPokemon,
             EndOfRound,
-            WeatherDiscard,
             Skill,
             SkillImm = 5000,
             Item = 5001,
@@ -28,7 +27,9 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
         public enum SkillType
         {
             Passive,
-            Active
+            Active,
+            Buff,
+            Void
         }
 
         public enum DamageDonePriority
@@ -36,6 +37,25 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
             Default,
             DawnProtect,
             BurntLotus
+        }
+
+        public enum BuffRemovePriority
+        {
+            Default,
+            NormalSteal,
+            NormalRemove,
+            HolyFire,
+            BecomeLotus,
+            HeartLotus,
+            FeatherProtect,
+            Highest,
+        }
+        
+        public enum Position
+        {
+            Front,
+            Mid,
+            Back
         }
     }
 }

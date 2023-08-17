@@ -54,7 +54,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 UpdatedRoundCount = RoundCount;
             }
             
-            if (CurBattleRound.GetRemainingPlayables().Count != 0)
+            if (CurBattleRound.GetRemainingPlayableCount() != 0)
             {
                 CurBattleRound.ExecuteBattleStage();
                 return;
@@ -102,11 +102,6 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             CurBattleRound.AddBattlePlayables(skill);
         }
 
-        public void TransferControlToPendingPlayable(ABattlePlayable playable)
-        {
-            CurBattleRound.TransferControlToPendingPlayable(playable);
-        }
-
         public void BorrowControlToPendingPlayable(ABattlePlayable self, ABattlePlayable targetPlayable)
         {
             CurBattleRound.BorrowControlToPendingPlayable(self, targetPlayable);
@@ -116,7 +111,7 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
         {
             hero.Properties.IsAlive = false;
             hero.Anchor.gameObject.SetActive(false);
-            CurBattleRound.RemoveRunTimeSkill(hero);
+            RemoveRunTimeSkillBySource(hero);
             await BuffMgr.Instance.RemoveAllBuffByTarget(hero);
             await BuffMgr.Instance.RemoveAllAttributeBySource(hero);
         }

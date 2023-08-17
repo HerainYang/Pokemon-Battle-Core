@@ -26,6 +26,8 @@ namespace Editor.BattleMonitor
         private static readonly GUIStyle Attribute = new GUIStyle();
         private static readonly GUIStyle Weather = new GUIStyle();
 
+        private Vector2 _scrollPos;
+
         [MenuItem("Tools/BattleMonitor")]
         public static void ShowWindow()
         {
@@ -82,7 +84,9 @@ namespace Editor.BattleMonitor
             EditorGUI.DrawRect(rect, new Color(1f, 1f, 1f, 1));
 
             EditorGUILayout.BeginVertical();
+            _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.Width(_thisWindow.position.width - 300), GUILayout.Height(_thisWindow.position.height));
             RenderContent();
+            EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndHorizontal();

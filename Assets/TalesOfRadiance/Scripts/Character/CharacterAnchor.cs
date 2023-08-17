@@ -15,6 +15,7 @@ namespace TalesOfRadiance.Scripts.Character
         private GameObject _heroUI;
         private HeroStatusUI _heroStatusUI;
         public RuntimeHero Hero;
+        public int position;
         public bool isActive = false;
         public async UniTask Init(int index, CharacterTeam team)
         {

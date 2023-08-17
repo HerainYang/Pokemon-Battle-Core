@@ -257,6 +257,43 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             return input;
         };
         
+        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectHighestAttackFromPrevious = async (input, hero, template) =>
+        {
+            var preLoadInput = (SkillResult)input;
+            var skillTemplate = (SkillTemplate)template;
+
+            if (preLoadInput.TargetHeroes == null || preLoadInput.TargetHeroes.Count == 0)
+            {
+                Debug.LogError("Target hero list shouldn't be empty");
+                return input;
+            }
+
+            List<RuntimeHero> targets = new List<RuntimeHero>();
+
+            for (int i = 0; i < skillTemplate.TargetCount; i++)
+            {
+                if(preLoadInput.TargetHeroes.Count == 0)
+                    break;
+
+                RuntimeHero highest = preLoadInput.TargetHeroes[0];
+                foreach (var runtimeHero in preLoadInput.TargetHeroes)
+                {
+                    if (runtimeHero.Properties.Attack > highest.Properties.Attack)
+                    {
+                        highest = runtimeHero;
+                    }
+                }
+
+                targets.Add(highest);
+                preLoadInput.TargetHeroes.Remove(highest);
+            }
+            
+            preLoadInput.TargetHeroes = targets;
+            
+            await UniTask.Yield();
+            return input;
+        };
+        
         public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> SelectOneFaintTeammate = async (input, hero, arg3) =>
         {
             var runtimeHero = (AtorBattleEntity)hero;
@@ -272,6 +309,18 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents.BattleLogics
             }
             int index = Random.Range(0, potentialList.Count);
             preLoadInput.TargetHeroes.Add(potentialList[index]);
+
+            await UniTask.Yield();
+            return input;
+        };
+        
+        public static readonly Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>> CalculateTotalDamageToEach = async (input, hero, template) =>
+        {
+            var runtimeHero = (RuntimeHero)hero;
+            var preLoadInput = (SkillResult)input;
+            var skillTemplate = (SkillTemplate)template;
+
+            preLoadInput.Damage = (int)(runtimeHero.Properties.Attack * skillTemplate.ValueChangeRate / preLoadInput.TargetHeroes.Count);
 
             await UniTask.Yield();
             return input;

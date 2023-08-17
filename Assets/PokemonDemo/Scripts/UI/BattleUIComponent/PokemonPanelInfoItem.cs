@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 namespace PokemonDemo.Scripts.UI.BattleUIComponent
 {
-    [CanEditMultipleObjects]
     public class PokemonPanelInfoItem : MonoBehaviour
     {
         public Pokemon ThisPokemon;

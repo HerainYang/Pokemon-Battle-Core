@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/TalesOfRadiance.unity
+    guid: 45a1783180e19d975bf4b87b1fdcfa55
+  - enabled: 1
     path: Assets/Scenes/Pokemon.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   m_configObjects:

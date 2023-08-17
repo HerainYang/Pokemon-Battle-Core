@@ -21,78 +21,97 @@ MonoBehaviour:
     m_Address: BattleStartPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 82633bf2e78b8d54fa07ae188788dd54
     m_Address: TeamDetail
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7935bff00eb58da7e902ac94ff74f906
     m_Address: TrainerDetail
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88855fcd2cfc58f4fb9d247c8dd466e8
     m_Address: BasicInfo
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: acac18fb4df5e6e4e8e22b9ab5013420
     m_Address: BattleScenePanel
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07d837adf6aa5380380e4a4f15072912
     m_Address: PokeImg
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7db2f4fe0435facb8b4ee763e3fd412
     m_Address: BallPrefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 587159a70078e3f81bf8b126eb09178b
     m_Address: HistoryCommandText
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f21124bd19f803d6c95b640fb66fe8e8
     m_Address: PokemonSelectPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 11768161c1316a644bc3c2352eebda15
     m_Address: PokemonBattleInfo
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1fd99805f2885d27599e1336b879ae6f
     m_Address: ItemSelectPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9d0d15f54a9c6799fab5e15bb792f6c6
     m_Address: TORC_ch023
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 533c1b380ebcb83ea85c116eefd97ec5
     m_Address: TORC_ch006
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2118625fa574d60a2b6cb676566947ba
     m_Address: TORC_ch020
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 61254f89847e00733ab0f1e37d3d5fba
     m_Address: TORC_ch028
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c2f57d9a72d460d01ac9bb35855dd255
     m_Address: TORC_ch065
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: ac5597ef7bc3616e8a7a864b9567eea7
-    m_Address: TORC_ch123
-    m_ReadOnly: 0
-    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69184555b05ff5d2581272a740f1ff6a
     m_Address: CharacterAnchor
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f4f8541b398e2bc308f06284ab904298
     m_Address: HeroUI
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb888678b750d9c4dbf8eb9148aac5ec
+    m_Address: TORC_ch021
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 1343e0f9abb29d9a2b43f16f72c34fcd, type: 2}
   m_SchemaSet:

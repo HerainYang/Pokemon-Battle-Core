@@ -44,6 +44,7 @@ namespace TalesOfRadiance.Scripts.Character
                 var o = Instantiate(handler, transform);
                 o.transform.localPosition = ConfigManager.Instance.GetAnchorPosition(position);
                 var anchor = o.GetComponent<CharacterAnchor>();
+                anchor.position = position;
                 _characterAnchors.Add(position, anchor);
                 BattleMgr.Instance.SentHeroOnStage(playerInfo.squadInfoByIndex[position], anchor, this);
             }

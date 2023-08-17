@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using TalesOfRadiance.Scripts.Battle.BattleComponents.RuntimeClass;
 using TalesOfRadiance.Scripts.Battle.BattlePlayables;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 using Types = TalesOfRadiance.Scripts.Battle.Constant.Types;
 
 namespace TalesOfRadiance.Scripts.Battle.BattleComponents
@@ -35,6 +36,8 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public int[][] AddBuffIndex;
         public float[] AddBuffPossibility;
 
+        public int ParentSkillID;
+
         public int[] PassiveSkillBuffList;
         
         // buff
@@ -43,7 +46,13 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
         public float ValueChangeRate;
         public bool RecoverHp;
 
-        public bool OnlyOneBuffShouldExist = false;
+        public Types.BuffRemovePriority CurrentBuffRemovePriority = Types.BuffRemovePriority.Default;
+
+        public bool HaveBuffNumberLimit = false;
+        public bool MultiLayerBuff = false;
+        public int BuffNumberLimit = 1;
+
+        
 
         public SkillTemplate(int skillID, string skillName, Func<ASkillResult, IBattleEntity, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] procedureFunctions, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null,  Func<List<Tuple<IBattleEntity, ASkillResult>>, ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onProcedureFunctionsEndCallBacks = null)
         {
@@ -52,7 +61,9 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             SkillType = Types.SkillType.Active;
             ProcedureFunctions = procedureFunctions;
             OnLoadRequest = onLoadRequest;
-            OnProcedureFunctionsEndCallBacks = onProcedureFunctionsEndCallBacks; 
+            OnProcedureFunctionsEndCallBacks = onProcedureFunctionsEndCallBacks;
+
+            Debug.Assert(!(HaveBuffNumberLimit && MultiLayerBuff));
         }
         
         public SkillTemplate(int skillID, string skillName, int[] passiveSkillBuffList, Func<ASkillResult, IBattleEntity, ASkillTemplate, UniTask<ASkillResult>>[] onLoadRequest = null)
@@ -62,6 +73,8 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             SkillType = Types.SkillType.Passive;
             PassiveSkillBuffList = passiveSkillBuffList;
             OnLoadRequest = onLoadRequest;
+            
+            Debug.Assert(!(HaveBuffNumberLimit && MultiLayerBuff));
         }
         
         public SkillTemplate(int id, string name, int effectRound, Types.BuffType buffType, Func<ASkillResult, IBattleEntity, IBattleEntity, ABuffRecorder, UniTask<ASkillResult>> callback, Func<IBattleEntity, IBattleEntity, ABuffRecorder, UniTask> onDestroyCallBacks, string buffTriggerEvent)
@@ -73,11 +86,16 @@ namespace TalesOfRadiance.Scripts.Battle.BattleComponents
             Name = name;
             OnDestroyCallBacks = onDestroyCallBacks;
             BuffType = buffType;
+            SkillType = Types.SkillType.Buff;
+            
+            Debug.Assert(!(HaveBuffNumberLimit && MultiLayerBuff));
         }
 
         public SkillTemplate()
         {
+            SkillType = Types.SkillType.Void;
             
+            Debug.Assert(!(HaveBuffNumberLimit && MultiLayerBuff));
         }
 
         public async UniTask<ABattlePlayable> SendLoadSkillRequest(AtorBattleEntity sourceEntity, SkillResult input = null)

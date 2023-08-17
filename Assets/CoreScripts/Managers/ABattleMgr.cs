@@ -1,3 +1,4 @@
+using CoreScripts.BattleComponents;
 using CoreScripts.BattlePlayables;
 using CoreScripts.Constant;
 using PokemonDemo.Scripts.Enum;
@@ -72,6 +73,16 @@ namespace CoreScripts.Managers
         {
             if (CurBattleRound.Status == Types.BattleRoundStatus.Running)
                 CurBattleRound.ExecuteBattleStage();
+        }
+
+        public void RemoveRunTimeSkillBySource(IBattleEntity source)
+        {
+            CurBattleRound.RemoveRunTimeSkill(source);
+        }
+        
+        public void TransferControlToPendingPlayable(ABattlePlayable playable)
+        {
+            CurBattleRound.TransferControlToPendingPlayable(playable);
         }
     }
 }

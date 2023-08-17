@@ -33,13 +33,31 @@ namespace TalesOfRadiance.Scripts.Battle.Constant
         public struct BuffEventKey
         {
             public const string AfterDebut = "AFTER_DEBUT";
-            public const string BeforeDamage = "BEFORE_DAMAGE";
-            public const string AfterDamage = "AFTER_DAMAGE";
+            public const string BeforeDamageActive = "BEFORE_DAMAGE_ACTIVE";
+            public const string AfterDamageActive = "AFTER_DAMAGE_ACTIVE";
+            public const string BeforeDamagePassive = "BEFORE_DAMAGE_PASSIVE";
+            public const string AfterDamagePassive = "AFTER_DAMAGE_PASSIVE";
+            
+            public const string BeforeHealActive = "BEFORE_HEAL_ACTIVE";
+            public const string AfterHealActive = "AFTER_HEAL_ACTIVE";
+            public const string BeforeHealPassive = "BEFORE_HEAL_PASSIVE";
+            public const string AfterHealPassive = "AFTER_HEAL_PASSIVE";
+            
             public const string BeforeRound = "BEFORE_ROUND";
             public const string AfterRound = "AFTER_ROUND";
-            public const string AfterHeal = "AFTER_HEAL";
-            public const string AfterApplyDamage = "AFTER_APPLY_DAMAGE";
+            
+            public const string AfterApplyDamageActive = "AFTER_APPLY_DAMAGE_ACTIVE";
+            public const string BeforeApplyDamageActive = "BEFORE_APPLY_DAMAGE_ACTIVE";
+            public const string AfterApplyDamagePassive = "AFTER_APPLY_DAMAGE_PASSIVE";
+            public const string BeforeApplyDamagePassive = "BEFORE_APPLY_DAMAGE_PASSIVE";
+            
+            public const string AfterApplyHealActive = "AFTER_APPLY_HEAL_ACTIVE";
+            public const string BeforeApplyHealActive = "BEFORE_APPLY_HEAL_ACTIVE";
+            public const string AfterApplyHealPassive = "AFTER_APPLY_HEAL_PASSIVE";
+            public const string BeforeApplyHealPassive = "BEFORE_APPLY_HEAL_PASSIVE";
+            
             public const string BeforeFaint = "BEFORE_FAINT";
+            public const string AfterAddThisBuff = "AFTER_ADD_THIS_BUFF";
             public const string AfterAddBuff = "AFTER_ADD_BUFF";
             public const string BeforeExecuteBuff = "BEFORE_EXECUTE_BUFF";
         }

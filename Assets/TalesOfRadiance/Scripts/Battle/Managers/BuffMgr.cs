@@ -38,15 +38,17 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
             BuffRecorder recorder = new BuffRecorder(source, target, template, isAttribute);
             listener.Add(recorder);
 
-            if (recorder.Template.BuffTriggerEvent == Constant.Constant.BuffEventKey.AfterAddBuff)
+            if (recorder.Template.BuffTriggerEvent == Constant.Constant.BuffEventKey.AfterAddThisBuff)
             {
                 await ExecuteBuffByRecorder(recorder, new SkillResult(), target);
             }
+
+            await ExecuteBuff(Constant.Constant.BuffEventKey.AfterAddBuff, new SkillResult(), target);
             
             return recorder;
         }
 
-        public async UniTask RemoveAllNegativeBuffByTarget(IBattleEntity target)
+        public async UniTask RemoveAllNegativeBuffByTarget(IBattleEntity target, Types.BuffRemovePriority buffRemovePriority = Types.BuffRemovePriority.Highest)
         {
             foreach (var pair in Listeners)
             {
@@ -58,24 +60,60 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 for (int i = list.Count - 1; i >= 0; i--)
                 {
                     ABuffRecorder recorder = list[i];
-                    if (!recorder.DeletePending && recorder.Target != null && recorder.Target.Equals(target) && recorder.Template is SkillTemplate template)
+                    if (recorder.DeletePending || recorder.Target == null || !recorder.Target.Equals(target) || recorder.Template is not SkillTemplate template)
+                        continue;
+                    if (template.BuffType != Types.BuffType.Negative)
                     {
-                        if (template.BuffType != Types.BuffType.Negative)
-                        {
-                            continue;
-                        }
-                        if (recorder.Template.OnDestroyCallBacks != null)
-                        {
-                            await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
-                        }
-
-                        recorder.DeletePending = true;
+                        continue;
                     }
+                    if (buffRemovePriority < template.CurrentBuffRemovePriority)
+                    {
+                        continue;
+                    }
+                    if (recorder.Template.OnDestroyCallBacks != null)
+                    {
+                        await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                    }
+
+                    recorder.DeletePending = true;
                 }
             }
         }
         
-        public async UniTask<SkillTemplate> RemoveOnePositiveBuffByTarget(IBattleEntity target)
+        public async UniTask RemoveAllPositiveBuffByTarget(IBattleEntity target, Types.BuffRemovePriority buffRemovePriority = Types.BuffRemovePriority.Highest)
+        {
+            foreach (var pair in Listeners)
+            {
+                var list = pair.Value;
+                if (list.Count == 0)
+                {
+                    continue;
+                }
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    ABuffRecorder recorder = list[i];
+                    if (recorder.DeletePending || recorder.Target == null || !recorder.Target.Equals(target) || recorder.Template is not SkillTemplate template)
+                        continue;
+                    if (template.BuffType != Types.BuffType.Positive)
+                    {
+                        continue;
+                    }
+                    if (buffRemovePriority < template.CurrentBuffRemovePriority)
+                    {
+                        continue;
+                    }
+                    if (recorder.Template.OnDestroyCallBacks != null)
+                    {
+                        await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                    }
+
+                    recorder.DeletePending = true;
+                }
+            }
+        }
+
+        
+        public async UniTask<SkillTemplate> RemoveOnePositiveBuffByTarget(IBattleEntity target, Types.BuffRemovePriority buffRemovePriority = Types.BuffRemovePriority.Highest)
         {
             foreach (var pair in Listeners)
             {
@@ -88,20 +126,25 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 for (int i = list.Count - 1; i >= 0; i--)
                 {
                     ABuffRecorder recorder = list[i];
-                    if (!recorder.DeletePending && recorder.Target != null && recorder.Target.Equals(target) && !recorder.IsAttribute && recorder.Template is SkillTemplate template)
+                    if (recorder.DeletePending || recorder.Target == null || !recorder.Target.Equals(target) || recorder.IsAttribute || recorder.Template is not SkillTemplate template)
                     {
-                        if (template.BuffType != Types.BuffType.Positive)
-                        {
-                            continue;
-                        }
-                        if (recorder.Template.OnDestroyCallBacks != null)
-                        {
-                            await recorder.Template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
-                        }
-
-                        recorder.DeletePending = true;
-                        return template;
+                        continue;
                     }
+                    if (template.BuffType != Types.BuffType.Positive)
+                    {
+                        continue;
+                    }
+                    if (buffRemovePriority < template.CurrentBuffRemovePriority)
+                    {
+                        continue;
+                    }
+                    if (template.OnDestroyCallBacks != null)
+                    {
+                        await template.OnDestroyCallBacks(recorder.Source, recorder.Target, recorder);
+                    }
+
+                    recorder.DeletePending = true;
+                    return template;
                 }
             }
 
@@ -118,10 +161,21 @@ namespace TalesOfRadiance.Scripts.Battle.Managers
                 return buffRecorders;
             }
 
-            buffRecorders.AddRange(listener.Where(buffRecorder => !buffRecorder.DeletePending && Equals(buffRecorder.Target, target)));
+            buffRecorders.AddRange(listener.Where(buffRecorder => !buffRecorder.DeletePending && buffRecorder.Template.ID == buffID && Equals(buffRecorder.Target, target)));
 
             return buffRecorders;
         }
+        
+        public List<ABuffRecorder> GetNegativeBuffListByTargetAndBuffID(IBattleEntity target)
+        {
+            return (from pair in Listeners from recorder in pair.Value where !recorder.DeletePending && ((SkillTemplate)recorder.Template).BuffType == Types.BuffType.Negative && Equals(recorder.Target, target) select recorder).ToList();
+        }
+        
+        public List<ABuffRecorder> GetPositiveBuffListByTargetAndBuffID(IBattleEntity target)
+        {
+            return (from pair in Listeners from recorder in pair.Value where !recorder.DeletePending && ((SkillTemplate)recorder.Template).BuffType == Types.BuffType.Positive && Equals(recorder.Target, target) select recorder).ToList();
+        }
+
 
         public override async UniTask<ASkillResult> ExecuteBuff(string evt, ASkillResult input, IBattleEntity target)
         {
